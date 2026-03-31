@@ -105,32 +105,13 @@
           <input id="plantKind" class="panel-input" type="text" placeholder="t.ex. Monstera deliciosa" />
         </div>
         <div class="form-group">
-          <label>Välj bild</label>
-          <div class="image-picker-grid" id="imagePickerGrid">
-            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&w=500&q=60">
-              <img src="https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&w=500&q=60" alt="bild 1" />
-            </button>
-            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=500&q=60">
-              <img src="https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=500&q=60" alt="bild 2" />
-            </button>
-            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=500&q=60">
-              <img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=500&q=60" alt="bild 3" />
-            </button>
-            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=500&q=60">
-              <img src="https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=500&q=60" alt="bild 4" />
-            </button>
-            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=500&q=60">
-              <img src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=500&q=60" alt="bild 5" />
-            </button>
-            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1526401485004-10078dc7b2a2?auto=format&fit=crop&w=500&q=60">
-              <img src="https://images.unsplash.com/photo-1526401485004-10078dc7b2a2?auto=format&fit=crop&w=500&q=60" alt="bild 6" />
-            </button>
-          </div>
-          <input id="plantImageUpload" class="panel-input file-input" type="file" accept="image/*" />
+          <label for="plantImageUpload">Välj bild</label>
+          <input id="plantImageUpload" class="panel-input file-input" type="file" accept="image/*" required />
           <div class="image-preview hidden" id="imagePreview">
             <img src="" alt="Förhandsvisning av vald bild" />
             <button class="image-remove" type="button">Ta bort</button>
           </div>
+          <p class="form-warning hidden" id="plantFormWarning"></p>
         </div>
 
         <div class="panel-form-actions">

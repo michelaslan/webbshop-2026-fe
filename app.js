@@ -70,10 +70,10 @@ const panelAddForm = document.getElementById('addPlantForm');
 const plantNameInput = document.getElementById('plantName');
 const plantKindInput = document.getElementById('plantKind');
 const plantImageUpload = document.getElementById('plantImageUpload');
-const imagePickerGrid = document.getElementById('imagePickerGrid');
 const imagePreview = document.getElementById('imagePreview');
 const previewImage = imagePreview.querySelector('img');
 const imageRemoveButton = imagePreview.querySelector('.image-remove');
+const plantFormWarning = document.getElementById('plantFormWarning');
 const profileLabel = document.getElementById('panelLabel');
 const profileNameInput = document.getElementById('profileName');
 const profileEmailInput = document.getElementById('profileEmail');
@@ -142,7 +142,7 @@ function resetAddPlantForm() {
   selectedPlantImage = '';
   previewImage.src = '';
   imagePreview.classList.add('hidden');
-  imagePickerGrid.querySelectorAll('.image-option').forEach((btn) => btn.classList.remove('selected'));
+  plantFormWarning.classList.add('hidden');
 }
 
 function renderPlantItem(name, kind, imageSrc) {
@@ -195,16 +195,6 @@ panelCancelButton.addEventListener('click', exitEditMode);
 panelAddButton.addEventListener('click', enterAddMode);
 panelCancelAddButton.addEventListener('click', exitAddMode);
 
-imagePickerGrid.querySelectorAll('.image-option').forEach((button) => {
-  button.addEventListener('click', () => {
-    imagePickerGrid.querySelectorAll('.image-option').forEach((btn) => btn.classList.remove('selected'));
-    button.classList.add('selected');
-    selectedPlantImage = button.dataset.src;
-    previewImage.src = selectedPlantImage;
-    imagePreview.classList.remove('hidden');
-  });
-});
-
 imageRemoveButton.addEventListener('click', () => {
   selectedPlantImage = '';
   plantImageUpload.value = '';
@@ -222,7 +212,11 @@ plantImageUpload.addEventListener('change', (event) => {
   selectedPlantImage = objectUrl;
   previewImage.src = objectUrl;
   imagePreview.classList.remove('hidden');
-  imagePickerGrid.querySelectorAll('.image-option').forEach((btn) => btn.classList.remove('selected'));
+  plantFormWarning.classList.add('hidden');
+});
+
+[plantNameInput, plantKindInput].forEach((input) => {
+  input.addEventListener('input', () => plantFormWarning.classList.add('hidden'));
 });
 
 profileEditForm.addEventListener('submit', (event) => {
@@ -233,10 +227,16 @@ profileEditForm.addEventListener('submit', (event) => {
 
 panelAddForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  const name = plantNameInput.value.trim() || 'Ny växt';
-  const kind = plantKindInput.value.trim() || 'Okänd sort';
-  const imageSrc = selectedPlantImage || 'https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&w=500&q=60';
-  renderPlantItem(name, kind, imageSrc);
+  const name = plantNameInput.value.trim();
+  const kind = plantKindInput.value.trim();
+
+  if (!name || !kind || !selectedPlantImage) {
+    plantFormWarning.textContent = 'Vänligen fyll i namn, sort och välj en bild innan du lägger till växt.';
+    plantFormWarning.classList.remove('hidden');
+    return;
+  }
+
+  renderPlantItem(name, kind, selectedPlantImage);
   updatePlantSection();
   exitAddMode();
   openProfilePanel();

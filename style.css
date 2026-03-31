@@ -8,6 +8,10 @@ html, body {
   font-family: Arial, sans-serif;
 }
 
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 h1 {
   margin: 16px;
 }
@@ -86,6 +90,7 @@ h1 {
   z-index: 1000;
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
   overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
   padding-bottom: 100px;
 }
 
@@ -133,10 +138,10 @@ h1 {
 }
 
 .panel-edit {
-  border: 1px solid #d9d9d9;
-  background: #fff;
+  border: 1px solid #c4c4c4;
+  background: #f5f5f5;
   color: #333;
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 8px 14px;
   font-size: 14px;
   font-weight: 600;
@@ -144,7 +149,7 @@ h1 {
 }
 
 .panel-edit:hover {
-  background: #f7f7f7;
+  background: #f5f5f5;
 }
 
 .panel-card {
@@ -204,13 +209,13 @@ h1 {
   position: absolute;
   bottom: 24px;
   right: 24px;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
   border: none;
-  background: #1ea44a;
+  background: #2e6b44;
   color: #fff;
-  font-size: 28px;
+  font-size: 26px;
   line-height: 1;
   cursor: pointer;
   display: inline-flex;
@@ -304,9 +309,9 @@ h1 {
 .panel-save-add,
 .panel-save {
   border: none;
-  background: #1ea44a;
+  background: #2e6b44;
   color: #fff;
-  border-radius: 14px;
+  border-radius: 10px;
   padding: 14px 20px;
   font-weight: 700;
   cursor: pointer;
@@ -314,10 +319,10 @@ h1 {
 
 .panel-cancel-add,
 .panel-cancel {
-  border: 1px solid #d9d9d9;
-  background: #fff;
+  border: 1px solid #c4c4c4;
+  background: #f8f8f8;
   color: #111;
-  border-radius: 14px;
+  border-radius: 10px;
   padding: 14px 20px;
   cursor: pointer;
 }
@@ -417,19 +422,19 @@ h1 {
   font-weight: 700;
 }
 
-.panel-cancel {
-  background: #fff;
-  color: #111;
-  border: 1px solid #d9d9d9;
-}
-
-.panel-save {
-  background: #1ea44a;
-  color: #fff;
-}
-
 .panel-cancel:hover,
 .panel-save:hover {
-  opacity: 0.95;
+  opacity: 1;
+}
+
+.form-warning {
+  display: block;
+  margin-top: 10px;
+  color: #9b2c2c;
+  background: #fff0f0;
+  border: 1px solid #e2b8b8;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
 }
 

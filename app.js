@@ -57,3 +57,193 @@ map.on('click', (e) => {
 
 // Show address for initial marker position
 updateMarkerPopup(marker.getLatLng());
+
+const profileButton = document.querySelector('.icon-button');
+const profilePanel = document.getElementById('profilePanel');
+const closePanel = document.getElementById('closePanel');
+const profileLocation = document.getElementById('profileLocation');
+const panelEditButton = document.querySelector('.panel-edit');
+const panelView = document.querySelector('.panel-view');
+const profileEditForm = document.getElementById('profileEditForm');
+const panelAddButton = document.querySelector('.panel-add');
+const panelAddForm = document.getElementById('addPlantForm');
+const plantNameInput = document.getElementById('plantName');
+const plantKindInput = document.getElementById('plantKind');
+const plantImageUpload = document.getElementById('plantImageUpload');
+const imagePickerGrid = document.getElementById('imagePickerGrid');
+const imagePreview = document.getElementById('imagePreview');
+const previewImage = imagePreview.querySelector('img');
+const imageRemoveButton = imagePreview.querySelector('.image-remove');
+const profileLabel = document.getElementById('panelLabel');
+const profileNameInput = document.getElementById('profileName');
+const profileEmailInput = document.getElementById('profileEmail');
+const profileNameDisplay = document.querySelector('.panel-name');
+const panelCancelButton = document.querySelector('.panel-cancel');
+const panelCancelAddButton = document.querySelector('.panel-cancel-add');
+const plantList = document.getElementById('plantList');
+const panelEmptyState = document.getElementById('panelEmptyState');
+
+let selectedPlantImage = '';
+
+function updateProfileLocation(latlng) {
+  profileLocation.textContent = `${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`;
+}
+
+function openProfilePanel() {
+  profilePanel.classList.remove('hidden');
+  profilePanel.setAttribute('aria-hidden', 'false');
+}
+
+function closeProfilePanel() {
+  profilePanel.classList.add('hidden');
+  profilePanel.setAttribute('aria-hidden', 'true');
+  exitEditMode();
+  exitAddMode();
+}
+
+function enterEditMode() {
+  panelView.classList.add('hidden');
+  profileEditForm.classList.remove('hidden');
+  panelAddForm.classList.add('hidden');
+  panelEditButton.classList.add('hidden');
+  panelAddButton.classList.add('hidden');
+  profileLabel.textContent = 'Redigera profil';
+}
+
+function exitEditMode() {
+  panelView.classList.remove('hidden');
+  profileEditForm.classList.add('hidden');
+  panelEditButton.classList.remove('hidden');
+  panelAddButton.classList.remove('hidden');
+  profileLabel.textContent = 'Min profil';
+}
+
+function enterAddMode() {
+  panelView.classList.add('hidden');
+  profileEditForm.classList.add('hidden');
+  panelAddForm.classList.remove('hidden');
+  panelEditButton.classList.add('hidden');
+  panelAddButton.classList.add('hidden');
+  profileLabel.textContent = 'Lägg till växt';
+}
+
+function exitAddMode() {
+  panelView.classList.remove('hidden');
+  panelAddForm.classList.add('hidden');
+  panelEditButton.classList.remove('hidden');
+  profileLabel.textContent = 'Min profil';
+  resetAddPlantForm();
+}
+
+function resetAddPlantForm() {
+  plantNameInput.value = '';
+  plantKindInput.value = '';
+  plantImageUpload.value = '';
+  selectedPlantImage = '';
+  previewImage.src = '';
+  imagePreview.classList.add('hidden');
+  imagePickerGrid.querySelectorAll('.image-option').forEach((btn) => btn.classList.remove('selected'));
+}
+
+function renderPlantItem(name, kind, imageSrc) {
+  const plantItem = document.createElement('div');
+  plantItem.className = 'plant-item';
+
+  const img = document.createElement('img');
+  img.src = imageSrc || 'https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&w=500&q=60';
+  img.alt = name;
+
+  const info = document.createElement('div');
+  info.className = 'plant-item-info';
+
+  const title = document.createElement('p');
+  title.className = 'plant-item-title';
+  title.textContent = name;
+
+  const kindText = document.createElement('p');
+  kindText.className = 'plant-item-kind';
+  kindText.textContent = kind;
+
+  const removeButton = document.createElement('button');
+  removeButton.type = 'button';
+  removeButton.className = 'plant-remove';
+  removeButton.textContent = 'Ta bort';
+  removeButton.addEventListener('click', () => {
+    plantItem.remove();
+    updatePlantSection();
+  });
+
+  info.append(title, kindText);
+  plantItem.append(img, info, removeButton);
+  plantList.appendChild(plantItem);
+}
+
+function updatePlantSection() {
+  if (plantList.children.length > 0) {
+    panelEmptyState.classList.add('hidden');
+    plantList.classList.remove('hidden');
+  } else {
+    panelEmptyState.classList.remove('hidden');
+    plantList.classList.add('hidden');
+  }
+}
+
+profileButton.addEventListener('click', openProfilePanel);
+closePanel.addEventListener('click', closeProfilePanel);
+panelEditButton.addEventListener('click', enterEditMode);
+panelCancelButton.addEventListener('click', exitEditMode);
+panelAddButton.addEventListener('click', enterAddMode);
+panelCancelAddButton.addEventListener('click', exitAddMode);
+
+imagePickerGrid.querySelectorAll('.image-option').forEach((button) => {
+  button.addEventListener('click', () => {
+    imagePickerGrid.querySelectorAll('.image-option').forEach((btn) => btn.classList.remove('selected'));
+    button.classList.add('selected');
+    selectedPlantImage = button.dataset.src;
+    previewImage.src = selectedPlantImage;
+    imagePreview.classList.remove('hidden');
+  });
+});
+
+imageRemoveButton.addEventListener('click', () => {
+  selectedPlantImage = '';
+  plantImageUpload.value = '';
+  previewImage.src = '';
+  imagePreview.classList.add('hidden');
+});
+
+plantImageUpload.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  if (!file) {
+    return;
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+  selectedPlantImage = objectUrl;
+  previewImage.src = objectUrl;
+  imagePreview.classList.remove('hidden');
+  imagePickerGrid.querySelectorAll('.image-option').forEach((btn) => btn.classList.remove('selected'));
+});
+
+profileEditForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  profileNameDisplay.textContent = profileNameInput.value || 'Du';
+  exitEditMode();
+});
+
+panelAddForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const name = plantNameInput.value.trim() || 'Ny växt';
+  const kind = plantKindInput.value.trim() || 'Okänd sort';
+  const imageSrc = selectedPlantImage || 'https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&w=500&q=60';
+  renderPlantItem(name, kind, imageSrc);
+  updatePlantSection();
+  exitAddMode();
+  openProfilePanel();
+});
+
+updateProfileLocation(marker.getLatLng());
+marker.on('dragend', () => updateProfileLocation(marker.getLatLng()));
+marker.on('moveend', () => updateProfileLocation(marker.getLatLng()));
+
+updatePlantSection();

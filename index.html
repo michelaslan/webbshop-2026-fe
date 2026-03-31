@@ -18,7 +18,130 @@
 </head>
 <body>
   <h1>My Map</h1>
-  <div id="map"></div>
+  <div class="top-right-actions">
+    <button class="icon-button" aria-label="Profile">
+      <span class="user-icon" aria-hidden="true"></span>
+    </button>
+    <button class="primary-button">Förfrågningar</button>
+  </div>
+
+  <div class="map-shell">
+    <div id="map"></div>
+
+    <div class="panel-overlay hidden" id="profilePanel" aria-hidden="true">
+      <div class="panel-header">
+        <div>
+          <p class="panel-label" id="panelLabel">Min profil</p>
+          <p class="panel-subtitle">Hantera din profil och dina växter</p>
+        </div>
+        <div class="panel-actions">
+          <button class="panel-edit" type="button">Redigera</button>
+          <button class="panel-close" id="closePanel" aria-label="Stäng profil">×</button>
+        </div>
+      </div>
+
+      <div class="panel-view">
+        <div class="panel-card">
+          <div class="panel-avatar">
+            <span class="user-icon" aria-hidden="true"></span>
+          </div>
+          <div class="panel-card-content">
+            <p class="panel-name">Du</p>
+            <div class="panel-field">
+              <span class="panel-field-label">Plats</span>
+              <strong id="profileLocation">59.3293, 18.0686</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <p class="panel-section-title">MINA VÄXTER</p>
+          <div class="panel-empty" id="panelEmptyState">
+            Du har inte lagt upp några växter än
+            <span class="panel-hint">Tryck på + knappen för att lägga till din första växt</span>
+          </div>
+          <div class="plant-list hidden" id="plantList"></div>
+        </div>
+      </div>
+
+      <form class="panel-edit-form hidden" id="profileEditForm" novalidate>
+        <div class="form-group">
+          <label for="profileName">Namn</label>
+          <input id="profileName" class="panel-input" type="text" value="Du" />
+        </div>
+
+        <div class="form-group">
+          <label for="profileEmail">E-post</label>
+          <input id="profileEmail" class="panel-input" type="email" value="du@exempel.se" />
+        </div>
+
+        <p class="form-section-heading">Ändra lösenord (valfritt)</p>
+        <div class="form-group">
+          <label for="profileCurrentPassword">Nuvarande lösenord</label>
+          <input id="profileCurrentPassword" class="panel-input" type="password" placeholder="Ange ditt nuvarande lösenord" />
+        </div>
+        <div class="form-group">
+          <label for="profileNewPassword">Nytt lösenord</label>
+          <input id="profileNewPassword" class="panel-input" type="password" placeholder="Lämna tomt för att behålla" />
+        </div>
+        <div class="form-group">
+          <label for="profileConfirmPassword">Bekräfta lösenord</label>
+          <input id="profileConfirmPassword" class="panel-input" type="password" placeholder="Bekräfta nytt lösenord" />
+        </div>
+
+        <div class="panel-form-actions">
+          <button class="panel-cancel" type="button">Avbryt</button>
+          <button class="panel-save" type="submit">Spara</button>
+        </div>
+      </form>
+
+      <form class="panel-add-form hidden" id="addPlantForm" novalidate>
+        <div class="form-group">
+          <label for="plantName">Växtnamn</label>
+          <input id="plantName" class="panel-input" type="text" placeholder="t.ex. Min Monstera" />
+        </div>
+        <div class="form-group">
+          <label for="plantKind">Art/Sort</label>
+          <input id="plantKind" class="panel-input" type="text" placeholder="t.ex. Monstera deliciosa" />
+        </div>
+        <div class="form-group">
+          <label>Välj bild</label>
+          <div class="image-picker-grid" id="imagePickerGrid">
+            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&w=500&q=60">
+              <img src="https://images.unsplash.com/photo-1523413651479-597eb2da0ad6?auto=format&fit=crop&w=500&q=60" alt="bild 1" />
+            </button>
+            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=500&q=60">
+              <img src="https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=500&q=60" alt="bild 2" />
+            </button>
+            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=500&q=60">
+              <img src="https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=500&q=60" alt="bild 3" />
+            </button>
+            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=500&q=60">
+              <img src="https://images.unsplash.com/photo-1496307653780-42ee777d4833?auto=format&fit=crop&w=500&q=60" alt="bild 4" />
+            </button>
+            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=500&q=60">
+              <img src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=500&q=60" alt="bild 5" />
+            </button>
+            <button type="button" class="image-option" data-src="https://images.unsplash.com/photo-1526401485004-10078dc7b2a2?auto=format&fit=crop&w=500&q=60">
+              <img src="https://images.unsplash.com/photo-1526401485004-10078dc7b2a2?auto=format&fit=crop&w=500&q=60" alt="bild 6" />
+            </button>
+          </div>
+          <input id="plantImageUpload" class="panel-input file-input" type="file" accept="image/*" />
+          <div class="image-preview hidden" id="imagePreview">
+            <img src="" alt="Förhandsvisning av vald bild" />
+            <button class="image-remove" type="button">Ta bort</button>
+          </div>
+        </div>
+
+        <div class="panel-form-actions">
+          <button class="panel-cancel-add" type="button">Avbryt</button>
+          <button class="panel-save-add" type="submit">+ Lägg till</button>
+        </div>
+      </form>
+
+      <button class="panel-add" type="button" aria-label="Lägg till växt">+</button>
+    </div>
+  </div>
 
   <!-- Leaflet JS -->
   <script

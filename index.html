@@ -17,6 +17,26 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+<div id="login-modal" class="modal-overlay">
+  <div class="modal-box">
+    <h2 class="modal-title">Logga in</h2>
+    <p class="modal-subtitle">Välkommen till Plot Twist</p>
+    <div class="form-group">
+      <label for="login-email">E-post</label>
+      <input class="panel-input" type="email" id="login-email" placeholder="du@exempel.se" />
+    </div>
+    <div class="form-group">
+      <label for="login-password">Lösenord</label>
+      <input class="panel-input" type="password" id="login-password" placeholder="••••••••" />
+    </div>
+    <p class="form-warning hidden" id="login-error"></p>
+    <button id="login-submit" class="panel-save" style="width:100%; margin-top: 8px;">Logga in</button>
+    <button id="close-login" class="panel-cancel" style="width:100%; margin-top: 8px;">Avbryt</button>
+    <p class="modal-footer-text">Inget konto? <a href="register.html">Registrera dig</a></p>
+  </div>
+</div>
+
   <h1>Plot Twist</h1>
   <div class="top-right-actions">
     <button class="icon-button" aria-label="Profile">
@@ -133,5 +153,6 @@
 
   <!-- Your JS -->
   <script src="app.js"></script>
+  <script src="loginModal.js"></script>
 </body>
 </html>

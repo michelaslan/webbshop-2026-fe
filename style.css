@@ -11,6 +11,52 @@ html, body {
 *, *::before, *::after {
   box-sizing: border-box;
 }
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid #e7e7e7;
+  padding: 2rem;
+  width: 100%;
+  max-width: 380px;
+  margin: 1rem;
+  display: grid;
+  gap: 16px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.modal-subtitle {
+  margin: -8px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.modal-footer-text {
+  text-align: center;
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+.modal-footer-text a {
+  color: #2e6b44;
+  font-weight: 600;
+  text-decoration: none;
+}
 
 h1 {
   margin: 16px;

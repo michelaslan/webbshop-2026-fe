@@ -27,6 +27,29 @@ body {
   padding: 0;
 }
 
+#addPlantBtn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 1000;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  border: none;
+  background: rgb(114, 211, 114);
+  color:white;
+  font-size: 25px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+#addPlantBtn:hover {
+background-color: rgb(32, 95, 32);
+}
+
 .profile-button:hover {
   background: #ffffff;
 }
@@ -168,4 +191,20 @@ body {
 
 .profile-action-button:active {
   background: #c7ccd2;
+}
+
+.addPlant-panel {
+  display: none;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  height: 55vh;
+  width: min(360px, 90vw);
+  background: white;
+  z-index: 1050;
+  padding: 24px;
+}
+
+.addPlant-panel.open {
+  display: block;
 }

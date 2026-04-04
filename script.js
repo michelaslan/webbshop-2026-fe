@@ -1,3 +1,4 @@
+var currentAddress = "";
 var map = L.map('map').setView([59.3293, 18.0686], 14);
 
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -50,12 +51,8 @@ async function getAddress(lat, lon) {
 // Funktion som flyttar markern och visar popup med adress
 async function updateMarkerAndPopup(latlng) {
     marker.setLatLng(latlng);
-
-    var address = await getAddress(latlng.lat, latlng.lng);
-
-    marker
-        .bindPopup("<b>Adress:</b><br>" + address)
-        .openPopup();
+    currentAddress = await getAddress(latlng.lat, latlng.lng);
+    marker.bindPopup("<b>Adress:</b><br>" + currentAddress).openPopup();
 }
 
 // Klick på kartan flyttar markern och visar adress

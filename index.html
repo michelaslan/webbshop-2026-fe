@@ -35,7 +35,8 @@
           <img src="public/user_icon.png" alt="Profilikon" />
         </div>
         <div>
-          <p class="profile-name">Du</p>
+          <p class="profile-name" id="profile-name">Du</p>
+          <p class="profile-email" id="profile-email">du@exempel.se</p>
         </div>
       </div>
 
@@ -45,6 +46,46 @@
       </div>
 
       <button class="profile-action-button" type="button">Redigera</button>
+    </div>
+
+    <div class="profile-edit-panel" aria-hidden="true">
+      <div class="profile-edit-header">
+        <div>
+          <p class="panel-title">Redigera profil</p>
+          <p class="panel-subtitle">Ändra dina uppgifter och lösenord</p>
+        </div>
+        <button class="profile-edit-close" aria-label="Stäng redigera profil">×</button>
+      </div>
+
+      <div class="profile-edit-body">
+        <label class="form-field">
+          <span>Namn</span>
+          <input id="edit-name" type="text" value="Du" />
+        </label>
+        <label class="form-field">
+          <span>E-post</span>
+          <input id="edit-email" type="email" value="du@exempel.se" />
+        </label>
+
+        <p class="edit-password-label">Ändra lösenord <span>(valfritt)</span></p>
+        <label class="form-field">
+          <span>Nuvarande lösenord</span>
+          <input id="current-password" type="password" placeholder="Ange ditt nuvarande lösenord" />
+        </label>
+        <label class="form-field">
+          <span>Nytt lösenord</span>
+          <input id="new-password" type="password" placeholder="Lämna tomt för att behålla" />
+        </label>
+        <label class="form-field">
+          <span>Bekräfta lösenord</span>
+          <input id="confirm-password" type="password" placeholder="Bekräfta nytt lösenord" />
+        </label>
+
+        <div class="profile-edit-actions">
+          <button class="profile-edit-cancel" type="button">Avbryt</button>
+          <button class="profile-edit-save" type="button">Spara</button>
+        </div>
+      </div>
     </div>
   </aside>
 

@@ -41,6 +41,7 @@ async function saveUserPost(){
     const imageFile = document.getElementById("imageUpload").files[0];
     const imageBase64 = imageFile ? await toBase64(imageFile) : null;
     const latlng = marker.getLatLng();
+    const myPosts = document.querySelector("#myPosts");
 
     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json`);
     const data = await response.json();
@@ -65,16 +66,25 @@ async function saveUserPost(){
 
         const popupContent = `
             <div class="popupDiv">
-                <p>Plant:</p> ${plantTypeInput}<br>
-                <p>Light:</p> ${lightLevelInput}<br>
-                <p>Address:</p> ${currentAddress}<br>
-                ${imageBase64 ? `<img src="${imageBase64}"` : ""}
+                <p>Plant: ${plantTypeInput}</p><br>
+                <p>Light: ${lightLevelInput}</p><br>
+                <p>Address: ${currentAddress}</p><br>
+                ${imageBase64 ? `<img src="${imageBase64}"/>` : ""}
             </div>
         `;
         L.marker(latlng)
             .addTo(map)
             .bindPopup(popupContent)
             .openPopup();
+
+        const post = document.createElement("li");
+        post.innerHTML = `
+            <div class="postDiv-profile">
+                ${imageBase64 ? `<img src="${imageBase64}"` : ""}
+                <p>${plantTypeInput}</p>
+            </div>
+        `
+        myPosts.append(post);
     }
     catch (error) {
         console.error(error);

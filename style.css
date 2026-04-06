@@ -221,3 +221,13 @@ background-color: rgb(32, 95, 32);
   padding: 4px;
   cursor: pointer;
 }
+
+
+.popupDiv {
+max-width:200px"
+}
+.popupDiv img {
+width:100%;
+margin-top:8px;
+border-radius:4px
+}

@@ -1,10 +1,7 @@
 //Declarate
-let addPlantBtn = document.querySelector("#addPlantBtn");
-let addPlantPanel = document.querySelector(".addPlant-panel");
-let plantPanelClose = document.querySelector(".plantPanel-close");
-let plantTypeInput = document.querySelector("#plantTypeInput").value;
-let lightLevelInput = document.querySelector("#LightLevelInput").value;
-
+const addPlantBtn = document.querySelector("#addPlantBtn");
+const addPlantPanel = document.querySelector(".addPlant-panel");
+const plantPanelClose = document.querySelector(".plantPanel-close");
 
 //Add plant panel: Open
 function openAddPlantPanel (){
@@ -28,14 +25,35 @@ function closeAddPlantPanel (){
     }
 }
 
+//Convert uploaded image to a string
+function toBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 async function saveUserPost(){
+    const plantTypeInput = document.querySelector("#plantTypeInput").value;
+    const lightLevelInput = document.querySelector("#LightLevelInput").value;
+    const imageFile = document.getElementById("imageUpload").files[0];
+    const imageBase64 = imageFile ? await toBase64(imageFile) : null;
+    const latlng = marker.getLatLng();
+
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json`);
+    const data = await response.json();
+    const currentAddress = data.display_name;
+
     const userData = {
         plantType: plantTypeInput,
         lightLevel: lightLevelInput,
-        address: currentAddress
+        address: currentAddress,
+        image: imageBase64
     };
     try {
-        const response = await fetch("http://localhost:3000/api/userposts", {
+        const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -44,6 +62,19 @@ async function saveUserPost(){
         });
         const result = await response.json();
         console.log(result);
+
+        const popupContent = `
+            <div class="popupDiv">
+                <p>Plant:</p> ${plantTypeInput}<br>
+                <p>Light:</p> ${lightLevelInput}<br>
+                <p>Address:</p> ${currentAddress}<br>
+                ${imageBase64 ? `<img src="${imageBase64}"` : ""}
+            </div>
+        `;
+        L.marker(latlng)
+            .addTo(map)
+            .bindPopup(popupContent)
+            .openPopup();
     }
     catch (error) {
         console.error(error);
@@ -53,3 +84,8 @@ async function saveUserPost(){
 //Run functions
 openAddPlantPanel();
 closeAddPlantPanel();
+
+const uploadBtn = document.querySelector("#upload");
+if (uploadBtn) {
+    uploadBtn.addEventListener("click", saveUserPost);
+}

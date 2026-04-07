@@ -72,6 +72,7 @@ async function saveUserPost(){
                 ${imageBase64 ? `<img src="${imageBase64}"/>` : ""}
             </div>
         `;
+
         L.marker(latlng)
             .addTo(map)
             .bindPopup(popupContent)
@@ -80,7 +81,7 @@ async function saveUserPost(){
         const post = document.createElement("li");
         post.innerHTML = `
             <div class="postDiv-profile">
-                ${imageBase64 ? `<img src="${imageBase64}"` : ""}
+                ${imageBase64 ? `<img src="${imageBase64}"/>` : ""}
                 <p>${plantTypeInput}</p>
             </div>
         `

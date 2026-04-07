@@ -87,10 +87,13 @@
         </div>
       </div>
     </div>
+    <p class="panel-subtitle">My Posts</p>
+    <ul id="myPosts">
+
+    </ul>
   </aside>
 
   
-
   <div id="map"></div>
   <button id="addPlantBtn">+</button>
   <aside class="addPlant-panel" aria-hidden="true">
@@ -101,7 +104,9 @@
       <option value="2">Day Light</option>
       <option value="3">Extreme Light</option>
     </select>
-
+    <input type="file" accept="image/*" id="imageUpload" style="display:none">
+    <button onclick="document.getElementById('imageUpload').click()">Upload Image</button>
+    <button id="upload">Upload</button>
   </aside>
 
 

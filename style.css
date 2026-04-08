@@ -250,6 +250,8 @@ body {
 
 .addPlant-panel {
   display: none;
+  flex-direction: column;
+  gap: 12px;
   position: absolute;
   bottom: 0;
   left: 0;
@@ -258,10 +260,50 @@ body {
   background: white;
   z-index: 1050;
   padding: 24px;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+  border-radius: 12px 12px 0 0;
+}
+
+
+.addPlant-panel input[type="text"],
+.addPlant-panel select {
+  width: 90%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.addPlant-panel button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #39868e;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+#upload {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #327345;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.addPlant-panel button.plantPanel-close {
+  background: transparent;
+  color: #5f6b78;
+  font-size: 1.5rem;
+  align-self: flex-end;
+  padding: 0;
 }
 
 .addPlant-panel.open {
-  display: block;
+  display: flex;
 }
 
 .Plantpanel-close {
@@ -272,4 +314,42 @@ body {
   line-height: 1;
   padding: 4px;
   cursor: pointer;
+}
+
+.popupDiv {
+max-width:200px"
+}
+.popupDiv img {
+width:100%;
+margin-top:8px;
+border-radius:4px
+}
+
+.postDiv-profile {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap:20px;
+
+}
+.postDiv-profile img{
+width: 40px;
+height: 40px;
+border-radius:4px;
+
+}
+
+#myPosts {
+  list-style: none;
+  margin:none;
+  padding:none;
+}
+
+.divIcon {
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  object-fit:cover;
+  border:3px solid white;
+  box-shadow:0 2px 6px rgba(0,0,0,0.4);
 }

@@ -1,6 +1,3 @@
-// Remove close button so users can't bypass the login gate
-document.getElementById("close-login").style.display = "none";
-
 // Automatically open the modal when the page loads
 // Why? We want to gate the app — no one can use it without logging in first
 window.addEventListener("load", () => {

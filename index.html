@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leaflet Starter</title>
-
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-
-  <!-- Your CSS -->
+  <title>Hakim Livs</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+   crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+   crossorigin=""></script>
+  <script src="script.js" defer></script>
+  <script src="profilepage.js" defer></script>
+  <script src="addPlant.js" defer></script>
+  <script src="loginModal.js" defer></script>
 </head>
 <body>
 
@@ -37,122 +37,57 @@
   </div>
 </div>
 
-  <h1>Plot Twist</h1>
-  <div class="top-right-actions">
-    <button class="icon-button" aria-label="Profile">
-      <span class="user-icon" aria-hidden="true"></span>
-    </button>
-    <button class="primary-button">Förfrågningar</button>
-  </div>
+  <button class="profile-button" aria-label="Open profile">
+    <img src="public/user_icon.png" alt="User icon" />
+  </button>
 
-  <div class="map-shell">
-    <div id="map"></div>
-
-    <div class="panel-overlay hidden" id="profilePanel" aria-hidden="true">
-      <div class="panel-header">
-        <div>
-          <p class="panel-label" id="panelLabel">Min profil</p>
-          <p class="panel-subtitle">Hantera din profil och dina växter</p>
-        </div>
-        <div class="panel-actions">
-          <button class="panel-edit" type="button">Redigera</button>
-          <button class="panel-close" id="closePanel" aria-label="Stäng profil">×</button>
-        </div>
+  <aside class="profile-panel" aria-hidden="true">
+    <div class="profile-panel__header">
+      <div>
+        <p class="panel-title">Min profil</p>
+        <p class="panel-subtitle">Hantera din profil och information</p>
       </div>
-
-      <div class="panel-view">
-        <div class="panel-card">
-          <div class="panel-avatar">
-            <span class="user-icon" aria-hidden="true"></span>
-          </div>
-          <div class="panel-card-content">
-            <p class="panel-name">Du</p>
-            <div class="panel-field">
-              <span class="panel-field-label">Plats</span>
-              <strong id="profileLocation">59.3293, 18.0686</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel-section">
-          <p class="panel-section-title">MINA VÄXTER</p>
-          <div class="panel-empty" id="panelEmptyState">
-            Du har inte lagt upp några växter än
-            <span class="panel-hint">Tryck på + knappen för att lägga till din första växt</span>
-          </div>
-          <div class="plant-list hidden" id="plantList"></div>
-        </div>
-      </div>
-
-      <form class="panel-edit-form hidden" id="profileEditForm" novalidate>
-        <div class="form-group">
-          <label for="profileName">Namn</label>
-          <input id="profileName" class="panel-input" type="text" value="Du" />
-        </div>
-
-        <div class="form-group">
-          <label for="profileEmail">E-post</label>
-          <input id="profileEmail" class="panel-input" type="email" value="du@exempel.se" />
-        </div>
-
-        <p class="form-section-heading">Ändra lösenord (valfritt)</p>
-        <div class="form-group">
-          <label for="profileCurrentPassword">Nuvarande lösenord</label>
-          <input id="profileCurrentPassword" class="panel-input" type="password" placeholder="Ange ditt nuvarande lösenord" />
-        </div>
-        <div class="form-group">
-          <label for="profileNewPassword">Nytt lösenord</label>
-          <input id="profileNewPassword" class="panel-input" type="password" placeholder="Lämna tomt för att behålla" />
-        </div>
-        <div class="form-group">
-          <label for="profileConfirmPassword">Bekräfta lösenord</label>
-          <input id="profileConfirmPassword" class="panel-input" type="password" placeholder="Bekräfta nytt lösenord" />
-        </div>
-
-        <div class="panel-form-actions">
-          <button class="panel-cancel" type="button">Avbryt</button>
-          <button class="panel-save" type="submit">Spara</button>
-        </div>
-      </form>
-
-      <form class="panel-add-form hidden" id="addPlantForm" novalidate>
-        <div class="form-group">
-          <label for="plantName">Växtnamn</label>
-          <input id="plantName" class="panel-input" type="text" placeholder="t.ex. Min Monstera" />
-        </div>
-        <div class="form-group">
-          <label for="plantKind">Art/Sort</label>
-          <input id="plantKind" class="panel-input" type="text" placeholder="t.ex. Monstera deliciosa" />
-        </div>
-        <div class="form-group">
-          <label for="plantImageUpload">Välj bild</label>
-          <input id="plantImageUpload" class="panel-input file-input" type="file" accept="image/*" required />
-          <div class="image-preview hidden" id="imagePreview">
-            <img src="" alt="Förhandsvisning av vald bild" />
-            <button class="image-remove" type="button">Ta bort</button>
-          </div>
-          <p class="form-warning hidden" id="plantFormWarning"></p>
-        </div>
-
-        <div class="panel-form-actions">
-          <button class="panel-cancel-add" type="button">Avbryt</button>
-          <button class="panel-save-add" type="submit">+ Lägg till</button>
-        </div>
-      </form>
-
-      <button class="panel-add" type="button" aria-label="Lägg till växt">+</button>
+      <button class="panel-close" aria-label="Stäng profil">×</button>
     </div>
-  </div>
 
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+    <div class="profile-panel__body">
+      <div class="profile-card">
+        <div class="profile-avatar">
+          <img src="public/user_icon.png" alt="Profilikon" />
+        </div>
+        <div>
+          <p class="profile-name">Du</p>
+        </div>
+      </div>
 
-  <!-- Your JS -->
-  <script src="app.js"></script>
-  <script src="loginModal.js"></script>
+      <div class="profile-detail">
+        <p class="detail-label">Plats</p>
+        <p id="profile-coordinates">59.3293, 18.0686</p>
+      </div>
+
+      <button class="profile-action-button" type="button">Redigera</button>
+    </div>
+
+    <p class="panel-subtitle">My Posts</p>
+    <ul id="myPosts">
+
+    </ul>
+  </aside>
+
+  <div id="map"></div>
+  <button id="addPlantBtn">+</button>
+  <aside class="addPlant-panel" aria-hidden="true">
+    <button class="plantPanel-close" aria-label="Stäng profil">×</button>
+    <input id="plantTypeInput" type="text" placeholder="Type of Plant">
+    <select name="Light Level" id="LightLevelInput">
+      <option value="1">Low Light</option>
+      <option value="2">Day Light</option>
+      <option value="3">Extreme Light</option>
+    </select>
+    <input type="file" accept="image/*" id="imageUpload" style="display:none">
+    <button onclick="document.getElementById('imageUpload').click()">Upload Image</button>
+    <button id="upload">Upload</button>
+  </aside>
+
 </body>
 </html>

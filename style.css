@@ -1,14 +1,22 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@400;500;600;700&display=swap");
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  min-height: 100%;
   font-family: "DM Sans", "Outfit", system-ui, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 #map {
   height: 100vh;
   width: 100vw;
 }
+
+/* ── Profile button ── */
 
 .profile-button {
   position: absolute;
@@ -37,14 +45,16 @@ body {
   object-fit: contain;
 }
 
+/* ── Profile panel & edit panel ── */
+
 .profile-panel,
 .profile-edit-panel {
-  display: none; 
+  display: none;
   position: absolute;
   top: 0;
   right: 0;
+  height: 94vh;
   width: min(360px, 90vw);
-  height: 94vh; 
   padding: 16px;
   background: white;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
@@ -57,18 +67,22 @@ body {
   display: block;
 }
 
+.profile-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
 .panel-close,
 .profile-edit-close {
   border: none;
   background: transparent;
-  color: #5f6b78;
+  color: #333;
   font-size: 1.5rem;
   line-height: 1;
   padding: 4px;
   cursor: pointer;
-  position: absolute;
-  top: 8px;
-  right: 8px;
 }
 
 .profile-panel input,
@@ -92,19 +106,6 @@ body {
   color: #111;
 }
 
-.profile-panel.open {
-  transform: translateX(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.profile-panel__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
 .panel-title {
   margin: 0;
   font-size: 1.25rem;
@@ -123,7 +124,7 @@ body {
   gap: 12px;
   padding: 12px;
   border-radius: 12px;
-  margin-bottom: 20px; 
+  margin-bottom: 20px;
   background: #f8f8f9;
 }
 
@@ -181,7 +182,7 @@ body {
   padding: 8px 14px;
   border: none;
   border-radius: 10px;
-  background: #e5e7eb; 
+  background: #e5e7eb;
   color: #111827;
   font-size: 0.9rem;
   font-weight: 700;
@@ -205,25 +206,27 @@ body {
 }
 
 .profile-edit-actions button {
-  flex: 1; 
+  flex: 1;
   padding: 10px 0;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.8rem;
   cursor: pointer;
-  background: #f0f0f0; 
+  background: #f0f0f0;
   color: #111;
 }
 
 .profile-edit-save {
-  background: #72d372;
-  color: white;
+  background: #72d372 !important;
+  color: white !important;
 }
 
 .profile-edit-actions button:hover {
-  opacity: 0.85; 
+  opacity: 0.85;
 }
+
+/* ── Add plant button & panel ── */
 
 #addPlantBtn {
   position: absolute;
@@ -305,19 +308,12 @@ body {
   display: flex;
 }
 
-.Plantpanel-close {
-  border: none;
-  background: transparent;
-  color: #5f6b78;
-  font-size: 1.5rem;
-  line-height: 1;
-  padding: 4px;
-  cursor: pointer;
-}
+/* ── Map popups & posts ── */
 
 .popupDiv {
   max-width: 200px;
 }
+
 .popupDiv img {
   width: 100%;
   margin-top: 8px;
@@ -330,6 +326,7 @@ body {
   align-items: center;
   gap: 20px;
 }
+
 .postDiv-profile img {
   width: 40px;
   height: 40px;
@@ -351,7 +348,7 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
 }
 
-/* ── Login modal (from loginGate branch) ── */
+/* ── Login modal ── */
 
 .modal-overlay {
   position: fixed;

@@ -54,7 +54,7 @@ async function saveUserPost(){
         image: imageBase64
     };
     try {
-        const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+        const response = await fetch("https://webbshop-2026-be-g08.vercel.app/plants", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

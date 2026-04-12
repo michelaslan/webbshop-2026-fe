@@ -3,6 +3,10 @@ var profilePanel = document.querySelector('.profile-panel');
 var profileClose = document.querySelector('.panel-close');
 var profileCoordinates = document.getElementById('profile-coordinates');
 
+var requestsButton = document.getElementById('requestsBtn');
+var requestsPanel = document.querySelector('.requests-panel');
+var requestsClose = document.querySelector('.requests-close');
+
 var profileName = document.getElementById('profile-name');
 var profileEmail = document.getElementById('profile-email');
 
@@ -18,10 +22,31 @@ var inputCurrentPassword = document.getElementById('current-password');
 var inputNewPassword = document.getElementById('new-password');
 var inputConfirmPassword = document.getElementById('confirm-password');
 
+function closeRequestsPanel() {
+    if (!requestsPanel) return;
+
+    requestsPanel.classList.remove('open');
+    requestsPanel.setAttribute('aria-hidden', 'true');
+}
+
+function closeProfilePanel() {
+    if (!profilePanel) return;
+
+    profilePanel.classList.remove('open');
+    profilePanel.setAttribute('aria-hidden', 'true');
+
+    if (editPanel) {
+        editPanel.classList.remove('open');
+        editPanel.setAttribute('aria-hidden', 'true');
+    }
+}
+
 // Öppnar panelen
 if (profileButton) {
     profileButton.addEventListener('click', function () {
         if (!profilePanel) return;
+
+        closeRequestsPanel();
 
         profilePanel.classList.add('open');
         profilePanel.setAttribute('aria-hidden', 'false');
@@ -38,16 +63,23 @@ if (profileButton) {
 // Stänger panelen när man klickar på stängknappen
 if (profileClose) {
     profileClose.addEventListener('click', function () {
-        if (!profilePanel) return;
+        closeProfilePanel();
+    });
+}
 
-        profilePanel.classList.remove('open');
-        profilePanel.setAttribute('aria-hidden', 'true');
+if (requestsButton) {
+    requestsButton.addEventListener('click', function () {
+        if (!requestsPanel) return;
 
-        // Stäng redigeringspanelen också
-        if (editPanel) {
-            editPanel.classList.remove('open');
-            editPanel.setAttribute('aria-hidden', 'true');
-        }
+        closeProfilePanel();
+        requestsPanel.classList.add('open');
+        requestsPanel.setAttribute('aria-hidden', 'false');
+    });
+}
+
+if (requestsClose) {
+    requestsClose.addEventListener('click', function () {
+        closeRequestsPanel();
     });
 }
 

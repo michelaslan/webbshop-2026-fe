@@ -16,6 +16,36 @@ html, body {
   width: 100vw;
 }
 
+/* ── Requests button ── */
+
+.requests-button {
+  position: absolute;
+  top: 16px;
+  right: 72px;
+  z-index: 1000;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f2937;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.requests-button:hover {
+  background: #ffffff;
+}
+
+.requests-button:active {
+  background: rgba(255, 255, 255, 0.86);
+}
+
 /* ── Profile button ── */
 
 .profile-button {
@@ -45,15 +75,24 @@ html, body {
   object-fit: contain;
 }
 
-/* ── Profile panel & edit panel ── */
+@media (max-width: 640px) {
+  .requests-button {
+    right: 68px;
+    padding: 0 10px;
+    font-size: 0.9rem;
+  }
+}
 
+/* ── Side panels ── */
+
+.requests-panel,
 .profile-panel,
 .profile-edit-panel {
   display: none;
   position: absolute;
   top: 0;
   right: 0;
-  height: 94vh;
+  height: 100vh;
   width: min(360px, 90vw);
   padding: 16px;
   background: white;
@@ -62,11 +101,13 @@ html, body {
   overflow-y: auto;
 }
 
+.requests-panel.open,
 .profile-panel.open,
 .profile-edit-panel.open {
   display: block;
 }
 
+.requests-panel__header,
 .profile-panel__header {
   display: flex;
   justify-content: space-between;
@@ -74,6 +115,7 @@ html, body {
   gap: 16px;
 }
 
+.requests-close,
 .panel-close,
 .profile-edit-close {
   border: none;
@@ -83,6 +125,30 @@ html, body {
   line-height: 1;
   padding: 4px;
   cursor: pointer;
+}
+
+.requests-panel__empty-state {
+  min-height: calc(100vh - 120px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.requests-panel__empty-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #111;
+}
+
+.requests-panel__empty-text {
+  margin: 4px 0 0;
+  max-width: 320px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #111;
 }
 
 .profile-panel input,

@@ -395,6 +395,7 @@ html, body {
   color: #2e6b44;
   font-weight: 600;
   text-decoration: none;
+  cursor:pointer;
 }
 
 .hidden {
@@ -450,4 +451,9 @@ html, body {
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 13px;
+}
+
+/* ── register modal ── */
+#register-modal{
+  display:none;
 }

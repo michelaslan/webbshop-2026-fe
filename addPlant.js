@@ -48,10 +48,11 @@ async function saveUserPost(){
     const currentAddress = data.display_name;
 
     const userData = {
-        plantType: plantTypeInput,
+        owner: 123,
+        name: plantTypeInput,
         lightLevel: lightLevelInput,
         address: currentAddress,
-        image: imageBase64
+        imageUrl: imageBase64
     };
     try {
         const response = await fetch("https://webbshop-2026-be-g08.vercel.app/plants", {

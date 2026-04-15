@@ -25,19 +25,24 @@ document.getElementById("login-submit").addEventListener("click", async () => {
   }
 
   try {
-    const res = await fetch("/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      const res = await fetch("https://webbshop-2026-be-g08.vercel.app/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
     });
 
     const data = await res.json();
 
     if (res.ok) {
-      // Store the token so we remember the user is logged in
-      localStorage.setItem("token", data.token);
+      const userRes = await fetch("https://webbshop-2026-be-g08.vercel.app/auth/me", {
+      headers: { Authorization: `Bearer ${data.token}` }
+      });
+      const userData = await userRes.json();
+      localStorage.setItem("user", JSON.stringify(userData));
+
       document.getElementById("login-modal").style.display = "none";
-    } else {
+    }
+    else {
       // Show the error message from the server
       document.getElementById("login-error").textContent = data.error || "Invalid email or password";
       document.getElementById("login-error").style.display = "block";

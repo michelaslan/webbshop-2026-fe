@@ -18,6 +18,14 @@ var inputCurrentPassword = document.getElementById('current-password');
 var inputNewPassword = document.getElementById('new-password');
 var inputConfirmPassword = document.getElementById('confirm-password');
 
+const storedUser = localStorage.getItem("user");
+if (storedUser) {
+    const user = JSON.parse(storedUser);
+    if (profileName && user.name) profileName.textContent = user.name;
+    if (profileEmail && user.email) profileEmail.textContent = user.email;
+}
+
+
 // Öppnar panelen
 if (profileButton) {
     profileButton.addEventListener('click', function () {

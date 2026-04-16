@@ -10,7 +10,7 @@ function showRegister(){
 });
     const uploadUser = document.querySelector("#register-submit");
     if (uploadUser) {
-        uploadUser.addEventListener("click", RegisterUser);
+        uploadUser.addEventListener("click", registerUser);
     }
 }
 
@@ -33,7 +33,15 @@ async function registerUser() {
             body: JSON.stringify(userData)
         });
         const result = await response.json();
+        console.log(userData);
         console.log(result);
+
+        if (response.ok) {
+            registerModal.style.display = "none";
+            loginModal.style.display = "flex";
+        } else {
+            console.error("Registration failed:", result);
+        }
     }
     catch (error) {
         console.error(error);

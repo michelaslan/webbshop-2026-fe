@@ -10,7 +10,7 @@ function openAddPlantPanel (){
             if (!addPlantPanel) return;
             addPlantPanel.classList.add('open');
             addPlantPanel.setAttribute('aria-hidden', 'false');
-        });
+});
     }
 }
 

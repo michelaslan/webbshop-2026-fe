@@ -15,6 +15,7 @@
   <script src="profilepage.js" defer></script>
   <script src="addPlant.js" defer></script>
   <script src="src/scripts/loginModal.js" defer></script>
+  <script src="src/scripts/register.js" defer></script>
 </head>
 <body>
 
@@ -33,13 +34,35 @@
     <p class="form-warning hidden" id="login-error"></p>
     <button id="login-submit" class="panel-save" style="width:100%; margin-top: 8px;">Logga in</button>
     <button id="close-login" class="panel-cancel" style="width:100%; margin-top: 8px;">Avbryt</button>
-    <p class="modal-footer-text">Inget konto? <a href="register.html">Registrera dig</a></p>
+    <p class="modal-footer-text">Inget konto? <a>Registrera dig</a></p>
+  </div>
+</div>
+
+<div id="register-modal" class="modal-overlay">
+  <div class="modal-box">
+    <h2 class="modal-title">Registrera</h2>
+    <p class="modal-subtitle">Skapa ett konto</p>
+    <div class="form-group">
+      <label for="login-name">Namn</label>
+      <input class="panel-input" type="text" id="register-name" placeholder="Anna Karlsson" />
+    </div>
+    <div class="form-group">
+      <label for="login-email">E-post</label>
+      <input class="panel-input" type="email" id="register-email" placeholder="du@exempel.se" />
+    </div>
+    <div class="form-group">
+      <label for="login-password">Lösenord</label>
+      <input class="panel-input" type="password" id="register-password" placeholder="••••••••" />
+    </div>
+    <button id="register-submit" class="panel-save" style="width:100%; margin-top: 8px;">Registrera</button>
+    <button id="close-register" class="panel-cancel" style="width:100%; margin-top: 8px;">Avbryt</button>
   </div>
 </div>
 
   <button id="requestsBtn" class="requests-button" type="button" aria-label="Öppna förfrågningar">
     <span>Förfrågningar</span>
   </button>
+
 
   <button class="profile-button" aria-label="Open profile">
     <img src="public/user_icon.png" alt="User icon" />

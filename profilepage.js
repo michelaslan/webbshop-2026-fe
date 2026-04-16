@@ -41,6 +41,14 @@ function closeProfilePanel() {
     }
 }
 
+const storedUser = localStorage.getItem("user");
+if (storedUser) {
+    const user = JSON.parse(storedUser);
+    if (profileName && user.name) profileName.textContent = user.name;
+    if (profileEmail && user.email) profileEmail.textContent = user.email;
+}
+
+
 // Öppnar panelen
 if (profileButton) {
     profileButton.addEventListener('click', function () {

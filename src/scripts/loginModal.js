@@ -34,11 +34,14 @@ document.getElementById("login-submit").addEventListener("click", async () => {
     const data = await res.json();
 
     if (res.ok) {
-      const userRes = await fetch("https://webbshop-2026-be-g08.vercel.app/auth/me", {
-      headers: { Authorization: `Bearer ${data.token}` }
-      });
-      const userData = await userRes.json();
-      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", data.token);
+      const user = data.user || { email };
+      localStorage.setItem("user", JSON.stringify(user));
+
+      const profileName = document.getElementById("profile-name");
+      const profileEmail = document.getElementById("profile-email");
+      if (profileName && user.name) profileName.textContent = user.name;
+      if (profileEmail && user.email) profileEmail.textContent = user.email;
 
       document.getElementById("login-modal").style.display = "none";
     }

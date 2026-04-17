@@ -9,6 +9,7 @@ var requestsClose = document.querySelector('.requests-close');
 
 var profileName = document.getElementById('profile-name');
 var profileEmail = document.getElementById('profile-email');
+var logoutButton = document.getElementById('logoutBtn');
 
 var editButton = document.querySelector('.profile-action-button');
 var editPanel = document.querySelector('.profile-edit-panel');
@@ -41,12 +42,47 @@ function closeProfilePanel() {
     }
 }
 
+function openLoginModal() {
+    var loginModal = document.getElementById('login-modal');
+    if (loginModal) {
+        loginModal.style.display = 'flex';
+    }
+}
+
+function updateAuthButton() {
+    if (!logoutButton) return;
+
+    var token = localStorage.getItem('token');
+    var isLoggedIn = Boolean(token);
+
+    logoutButton.textContent = isLoggedIn ? 'Logga ut' : 'Logga in';
+    logoutButton.classList.toggle('is-logout', isLoggedIn);
+    logoutButton.classList.toggle('is-login', !isLoggedIn);
+}
+
+function logoutUser() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
+    if (profileName) profileName.textContent = 'Du';
+    if (profileEmail) profileEmail.textContent = 'du@exempel.se';
+
+    closeProfilePanel();
+    updateAuthButton();
+    window.dispatchEvent(new Event('auth-changed'));
+
+    openLoginModal();
+}
+
 const storedUser = localStorage.getItem("user");
 if (storedUser) {
     const user = JSON.parse(storedUser);
     if (profileName && user.name) profileName.textContent = user.name;
     if (profileEmail && user.email) profileEmail.textContent = user.email;
 }
+
+updateAuthButton();
+window.addEventListener('auth-changed', updateAuthButton);
 
 
 // Öppnar panelen
@@ -88,6 +124,17 @@ if (requestsButton) {
 if (requestsClose) {
     requestsClose.addEventListener('click', function () {
         closeRequestsPanel();
+    });
+}
+
+if (logoutButton) {
+    logoutButton.addEventListener('click', function () {
+        if (localStorage.getItem('token')) {
+            logoutUser();
+            return;
+        }
+
+        openLoginModal();
     });
 }
 

@@ -43,6 +43,7 @@ document.getElementById("login-submit").addEventListener("click", async () => {
       if (profileName && user.name) profileName.textContent = user.name;
       if (profileEmail && user.email) profileEmail.textContent = user.email;
 
+      window.dispatchEvent(new Event("auth-changed"));
       document.getElementById("login-modal").style.display = "none";
     }
     else {

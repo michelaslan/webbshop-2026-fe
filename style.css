@@ -115,6 +115,13 @@ html, body {
   gap: 16px;
 }
 
+.profile-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
 .requests-close,
 .panel-close,
 .profile-edit-close {
@@ -263,6 +270,44 @@ html, body {
 
 .profile-action-button:active {
   background: #c7ccd2;
+}
+
+.profile-logout-button {
+  width: auto;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+  justify-self: start;
+  margin-top: 8px;
+}
+
+.profile-logout-button.is-logout {
+  background: #b91c1c;
+}
+
+.profile-logout-button.is-logout:hover {
+  background: #991b1b;
+}
+
+.profile-logout-button.is-logout:active {
+  background: #7f1d1d;
+}
+
+.profile-logout-button.is-login {
+  background: #16a34a;
+}
+
+.profile-logout-button.is-login:hover {
+  background: #15803d;
+}
+
+.profile-logout-button.is-login:active {
+  background: #166534;
 }
 
 .profile-edit-actions {

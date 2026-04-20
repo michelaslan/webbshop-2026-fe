@@ -15,15 +15,15 @@ filterClose.addEventListener("click", () => {
 
 // Apply filter — fetches plants from backend with filters and triggers map update
 applyFilter.addEventListener("click", async () => {
-  // Get all checked plant names
-  const checkedBoxes = document.querySelectorAll(".filter-checkbox-item input:checked");
-  const selectedNames = Array.from(checkedBoxes).map(cb => cb.value);
-  const lightLevel = document.getElementById("filterLightLevel").value;
+  const checkedNames = document.querySelectorAll(".filter-checkbox-item input[data-type='name']:checked");
+  const checkedLevels = document.querySelectorAll(".filter-checkbox-item input[data-type='light']:checked");
+  
+  const selectedNames = Array.from(checkedNames).map(cb => cb.value);
+  const selectedLevels = Array.from(checkedLevels).map(cb => cb.value);
 
   const params = new URLSearchParams();
-  // Add each selected name as a separate param
   selectedNames.forEach(name => params.append("name", name));
-  if (lightLevel) params.append("lightLevel", lightLevel);
+  selectedLevels.forEach(level => params.append("lightLevel", level));
 
   try {
     const res = await fetch(`/plants?${params.toString()}`);
@@ -38,7 +38,6 @@ applyFilter.addEventListener("click", async () => {
 // Clear filter — fetches all plants and resets the dropdowns
 clearFilter.addEventListener("click", async () => {
   document.querySelectorAll(".filter-checkbox-item input").forEach(cb => cb.checked = false);
-  document.getElementById("filterLightLevel").value = "";
 
   try {
     const res = await fetch("/plants");

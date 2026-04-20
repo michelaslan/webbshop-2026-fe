@@ -8,6 +8,19 @@ window.addEventListener("load", () => {
   // If token exists the user is already logged in, modal stays hidden
 });
 
+function completeLogin(user, token) {
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user));
+
+  const profileName = document.getElementById("profile-name");
+  const profileEmail = document.getElementById("profile-email");
+  if (profileName && user.name) profileName.textContent = user.name;
+  if (profileEmail && user.email) profileEmail.textContent = user.email;
+
+  window.dispatchEvent(new Event("auth-changed"));
+  document.getElementById("login-modal").style.display = "none";
+}
+
 // Close button handler (kept for later when we re-enable it)
 document.getElementById("close-login").addEventListener("click", () => {
   document.getElementById("login-modal").style.display = "none";
@@ -15,14 +28,17 @@ document.getElementById("close-login").addEventListener("click", () => {
 
 // Login submit handler
 document.getElementById("login-submit").addEventListener("click", async () => {
-  const email = document.getElementById("login-email").value;
+  const email = document.getElementById("login-email").value.trim().toLowerCase();
   const password = document.getElementById("login-password").value;
+  const loginError = document.getElementById("login-error");
 
   if (!email || !password) {
-    document.getElementById("login-error").textContent = "Please fill in all fields";
-    document.getElementById("login-error").style.display = "block";
+    loginError.textContent = "Please fill in all fields";
+    loginError.style.display = "block";
     return;
   }
+
+  loginError.style.display = "none";
 
   try {
       const res = await fetch("https://webbshop-2026-be-g08.vercel.app/auth/login", {
@@ -34,25 +50,16 @@ document.getElementById("login-submit").addEventListener("click", async () => {
     const data = await res.json();
 
     if (res.ok) {
-      localStorage.setItem("token", data.token);
       const user = data.user || { email };
-      localStorage.setItem("user", JSON.stringify(user));
-
-      const profileName = document.getElementById("profile-name");
-      const profileEmail = document.getElementById("profile-email");
-      if (profileName && user.name) profileName.textContent = user.name;
-      if (profileEmail && user.email) profileEmail.textContent = user.email;
-
-      window.dispatchEvent(new Event("auth-changed"));
-      document.getElementById("login-modal").style.display = "none";
+      completeLogin(user, data.token);
     }
     else {
       // Show the error message from the server
-      document.getElementById("login-error").textContent = data.error || "Invalid email or password";
-      document.getElementById("login-error").style.display = "block";
+      loginError.textContent = data.error || "Invalid email or password";
+      loginError.style.display = "block";
     }
   } catch (error) {
-    document.getElementById("login-error").textContent = "Something went wrong, please try again";
-    document.getElementById("login-error").style.display = "block";
+    loginError.textContent = "Something went wrong, please try again";
+    loginError.style.display = "block";
   }
 });

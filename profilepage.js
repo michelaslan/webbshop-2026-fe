@@ -23,6 +23,76 @@ var inputCurrentPassword = document.getElementById('current-password');
 var inputNewPassword = document.getElementById('new-password');
 var inputConfirmPassword = document.getElementById('confirm-password');
 
+async function verifyCurrentPassword(email, password) {
+    var normalizedEmail = (email || '').trim().toLowerCase();
+    if (!normalizedEmail || !password) return false;
+
+    try {
+        var response = await fetch('https://webbshop-2026-be-g08.vercel.app/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: normalizedEmail, password: password }),
+        });
+        return response.ok;
+    } catch (error) {
+        return false;
+    }
+}
+
+async function updateProfileInDatabase(params) {
+    var token = localStorage.getItem('token') || '';
+    if (!token) {
+        return { ok: false, message: 'Du måste vara inloggad för att uppdatera profilen.' };
+    }
+
+    var payload = {
+        name: params.name,
+        email: params.email,
+    };
+
+    if (params.wantsPasswordChange) {
+        payload.currentPassword = params.currentPassword;
+        payload.oldPassword = params.currentPassword;
+        payload.newPassword = params.newPassword;
+        payload.password = params.newPassword;
+    }
+
+    try {
+        var response = await fetch('https://webbshop-2026-be-g08.vercel.app/auth/me', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: 'Bearer ' + token,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        var data = null;
+        try {
+            data = await response.json();
+        } catch (error) {
+            data = null;
+        }
+
+        if (!response.ok) {
+            var message = (data && (data.error || data.message)) || 'Kunde inte uppdatera profil i databasen.';
+            return { ok: false, message: message };
+        }
+
+        var userFromResponse =
+            (data && data.user) ||
+            (data && data.data && data.data.user) ||
+            (data && data._id ? data : null);
+
+        return {
+            ok: true,
+            user: userFromResponse,
+        };
+    } catch (error) {
+        return { ok: false, message: 'Nätverksfel vid uppdatering av profilen.' };
+    }
+}
+
 function closeRequestsPanel() {
     if (!requestsPanel) return;
 
@@ -169,17 +239,88 @@ if (editCancel) editCancel.addEventListener('click', function () {
 });
 
 // Sparar ändringar i profilen
-if (editSave) editSave.addEventListener('click', function () {
+if (editSave) editSave.addEventListener('click', async function () {
     if (!profileName || !profileEmail || !inputName || !inputEmail) return;
 
+    var existingUser = null;
+    try {
+        existingUser = JSON.parse(localStorage.getItem('user') || 'null');
+    } catch (error) {
+        existingUser = null;
+    }
+
+    var currentEmail = (
+        (existingUser && existingUser.email) ||
+        (profileEmail && profileEmail.textContent) ||
+        ''
+    ).trim().toLowerCase();
+
+    var newName = (inputName.value || '').trim();
+    var newEmail = (inputEmail.value || '').trim().toLowerCase();
+    var currentPassword = (inputCurrentPassword && inputCurrentPassword.value ? inputCurrentPassword.value : '').trim();
+    var newPassword = (inputNewPassword && inputNewPassword.value ? inputNewPassword.value : '').trim();
+    var confirmPassword = (inputConfirmPassword && inputConfirmPassword.value ? inputConfirmPassword.value : '').trim();
+
+    if (!newEmail) {
+        alert('E-post kan inte vara tom.');
+        return;
+    }
+
+    var wantsPasswordChange = Boolean(currentPassword || newPassword || confirmPassword);
+
+    if (wantsPasswordChange && !currentPassword) {
+        alert('Ange nuvarande lösenord för att byta lösenord.');
+        return;
+    }
+
+    if (wantsPasswordChange && !newPassword) {
+        alert('Ange ett nytt lösenord.');
+        return;
+    }
+
     // Kolla om nya lösenord matchar
-    if (inputNewPassword.value && inputNewPassword.value !== inputConfirmPassword.value) {
+    if (newPassword && newPassword !== confirmPassword) {
         alert('De nya lösenorden matchar inte. Kontrollera och försök igen.');
         return;
     }
 
-    profileName.textContent = inputName.value || 'Du';
-    profileEmail.textContent = inputEmail.value || 'du@exempel.se';
+    if (wantsPasswordChange) {
+        var currentPasswordIsValid = await verifyCurrentPassword(currentEmail || newEmail, currentPassword);
+        if (!currentPasswordIsValid) {
+            alert('Nuvarande lösenord är felaktigt.');
+            return;
+        }
+    }
+
+    var updateResult = await updateProfileInDatabase({
+        name: newName || 'Du',
+        email: newEmail,
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+        wantsPasswordChange: wantsPasswordChange,
+    });
+
+    if (!updateResult.ok) {
+        alert(updateResult.message || 'Kunde inte uppdatera profil.');
+        return;
+    }
+
+    profileName.textContent = newName || 'Du';
+    profileEmail.textContent = newEmail || 'du@exempel.se';
+
+    var responseUser = updateResult.user || {};
+    var updatedUser = {
+        ...(existingUser || {}),
+        ...responseUser,
+        name: responseUser.name || newName || 'Du',
+        email: (responseUser.email || newEmail || '').trim().toLowerCase(),
+    };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    localStorage.removeItem('passwordOverrides');
+
+    if (inputCurrentPassword) inputCurrentPassword.value = '';
+    if (inputNewPassword) inputNewPassword.value = '';
+    if (inputConfirmPassword) inputConfirmPassword.value = '';
 
     // Stäng redigeringspanelen efter sparning
     if (editPanel) {

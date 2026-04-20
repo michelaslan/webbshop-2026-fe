@@ -36,6 +36,11 @@ function toBase64(file) {
 }
 
 async function saveUserPost(){
+    if (typeof createPlantFromPanel === "function") {
+        await createPlantFromPanel();
+        return;
+    }
+
     const plantTypeInput = document.querySelector("#plantTypeInput").value;
     const lightLevelInput = document.querySelector("#LightLevelInput").value;
     const imageFile = document.getElementById("imageUpload").files[0];

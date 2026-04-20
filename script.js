@@ -68,3 +68,12 @@ marker.on('dragend', function (e) {
 
 // Visa popup direkt när sidan laddas
 updateMarkerAndPopup(marker.getLatLng());
+
+// Listens for filtered plants from filter.js
+// When the filter is applied, this will update the map markers
+// Currently empty — will be filled when plant rendering is added
+window.addEventListener("plantsFiltered", (e) => {
+  const plants = e.detail;
+  console.log("Filtered plants received:", plants);
+  // TODO: call map marker update function here once plant rendering is built
+});

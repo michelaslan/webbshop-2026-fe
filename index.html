@@ -157,6 +157,60 @@
   </aside>
 
   <div id="map"></div>
+  <button id="filterBtn" aria-label="Filtrera växter">
+  <span class="filter-icon">&#9776;</span>
+  </button>
+  <aside class="filter-panel" aria-hidden="true">
+  <button class="filter-panel-close" aria-label="Stäng filter">×</button>
+  <p class="panel-title">Filtrera växter</p>
+  <p class="panel-subtitle">Visa bara det du letar efter</p>
+
+  <div class="form-group" style="margin-top: 16px;">
+  <label>Växttyp</label>
+  <div class="filter-checkbox-list">
+    <label class="filter-checkbox-item"><input type="checkbox" value="Monstera"> Monstera</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Efeutute"> Efeutute</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Svärmorstunga"> Svärmorstunga</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Fredslilja"> Fredslilja</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Gummiträd"> Gummiträd</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Fiolbladsfikonträd"> Fiolbladsfikonträd</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Spindelplanta"> Spindelplanta</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="ZZ-växt"> ZZ-växt</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Filodendron"> Filodendron</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Pilea"> Pilea</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Aloe Vera"> Aloe Vera</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Echeveria"> Echeveria</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Jadeplanta"> Jadeplanta</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Kaktus"> Kaktus</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Haworthia"> Haworthia</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Orkidé"> Orkidé</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Afrikanskt Viol"> Afrikanskt Viol</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Kalanchoe"> Kalanchoe</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Anthurium"> Anthurium</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Begonia"> Begonia</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Murgröna"> Murgröna</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Tradescantia"> Tradescantia</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Gullranka"> Gullranka</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Hängande Ampellilja"> Hängande Ampellilja</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Passionsblomma"> Passionsblomma</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Övrigt"> Övrigt</label>
+  </div>
+</div>  
+
+  <div class="form-group" style="margin-top: 12px;">
+    <label for="filterLightLevel">Ljusnivå</label>
+    <select id="filterLightLevel" class="panel-input">
+      <option value="">Alla ljusnivåer</option>
+      <option value="1">Lågt ljus</option>
+      <option value="2">Normalt ljus</option>
+      <option value="3">Starkt ljus</option>
+    </select>
+  </div>
+
+  <button id="applyFilter" class="panel-save" style="width:100%; margin-top: 16px;">Använd filter</button>
+  <button id="clearFilter" class="panel-cancel" style="width:100%; margin-top: 8px;">Rensa filter</button>
+</aside>
+
   <button id="addPlantBtn">+</button>
   <aside class="addPlant-panel" aria-hidden="true">
     <button class="plantPanel-close" aria-label="Stäng profil">×</button>
@@ -199,5 +253,6 @@
     <button id="upload">Upload</button>
   </aside>
 
-</body>
+
+<script src="src/scripts/filter.js" defer></script></body>
 </html>

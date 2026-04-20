@@ -382,7 +382,7 @@ function lightLevelLabel(value) {
 function getTradeStatusLabel(status) {
 	if (isPendingStatus(status)) return "Väntande";
 	if (status === "accepted") return "Godkänd";
-	if (status === "rejected") return "Nekad";
+	if (status === "rejected") return "nekad";
 	return "Tillgänglig";
 }
 
@@ -398,6 +398,30 @@ function getPlantIdsWithPendingRequests(allTrades) {
 			return String(trade.requestedPlant);
 		}),
 	);
+}
+
+function getPlantTradeStatus(plant, allTrades) {
+	const matchingTrades = allTrades.filter((trade) => {
+		return getIdFromValue(trade.requestedPlant) === String(plant.id);
+	});
+
+	if (matchingTrades.some((trade) => isPendingStatus(trade.status))) {
+		return "pending";
+	}
+
+	if (matchingTrades.some((trade) => trade.status === "accepted")) {
+		return "accepted";
+	}
+
+	if (matchingTrades.some((trade) => trade.status === "rejected")) {
+		return "rejected";
+	}
+
+	if (plant.isAvailable) {
+		return "available";
+	}
+
+	return "pending";
 }
 
 function createPlantIcon(plant) {
@@ -424,19 +448,14 @@ function buildOfferSelectOptions(currentUser) {
 	].join("");
 }
 
-function getPlantPopupStatus(plant, isPending) {
-	if (isPending) return "pending";
-	if (plant.isAvailable) return "available";
-	return "pending";
-}
-
-function buildRequestButtonText(currentUser, isPending) {
+function buildRequestButtonText(currentUser, status) {
 	if (!currentUser) return "Logga in för att skicka";
-	if (isPending) return "Trade är väntande";
+	if (status === "pending") return "Trade är väntande";
+	if (status === "accepted") return "Trade är godkänd";
 	return "Skicka förfrågan";
 }
 
-function buildTradeRequestSection(plant, currentUser, isOwner, isPending) {
+function buildTradeRequestSection(plant, currentUser, isOwner, status) {
 	if (isOwner) {
 		return `<p class="trade-owner-note">Detta är din trade. Du kan redigera eller ta bort den i Min profil.</p>`;
 	}
@@ -446,8 +465,8 @@ function buildTradeRequestSection(plant, currentUser, isOwner, isPending) {
 		offerOptions = buildOfferSelectOptions(currentUser);
 	}
 
-	const buttonText = buildRequestButtonText(currentUser, isPending);
-	const isDisabled = !currentUser || isPending;
+	const buttonText = buildRequestButtonText(currentUser, status);
+	const isDisabled = !currentUser || status === "pending" || status === "accepted";
 
 	return `
 		<div class="trade-popup__counter">
@@ -464,11 +483,10 @@ function buildTradeRequestSection(plant, currentUser, isOwner, isPending) {
 		</div>`;
 }
 
-function buildPlantPopup(plant, currentUser, isPending) {
+function buildPlantPopup(plant, currentUser, status) {
 	const isOwner = currentUser && plant.owner === currentUser.id;
-	const status = getPlantPopupStatus(plant, isPending);
 	const statusClass = `trade-status--${safeText(status)}`;
-	const requestSection = buildTradeRequestSection(plant, currentUser, isOwner, isPending);
+	const requestSection = buildTradeRequestSection(plant, currentUser, isOwner, status);
 
 	return `
 	  <article class="trade-popup" data-plant-card="${safeText(plant.id)}">
@@ -596,16 +614,15 @@ function renderPlantMarkers(allTrades) {
 	plantMarkers = [];
 
 	const currentUser = getCurrentUser();
-	const pendingRequestedPlantIds = getPlantIdsWithPendingRequests(allTrades);
 
 	plantsCache.forEach((plant) => {
-		const isPending = pendingRequestedPlantIds.has(String(plant.id));
+		const status = getPlantTradeStatus(plant, allTrades);
 
 		const plantMarker = L.marker([plant.lat, plant.lng], {
 			icon: createPlantIcon(plant),
 		}).addTo(map);
 
-		plantMarker.bindPopup(buildPlantPopup(plant, currentUser, isPending), {
+		plantMarker.bindPopup(buildPlantPopup(plant, currentUser, status), {
 			className: "trade-popup-shell",
 			maxWidth: 440,
 		});
@@ -833,7 +850,7 @@ function clearTradeMessageCache(tradeId) {
 }
 
 // incoming request
-async function rejectTrade(tradeId) {
+async function deleteTrade(tradeId) {
 	const response = await fetch(`${TRADE_API_BASE}/trades/${tradeId}`, {
 		method: "DELETE",
 	});
@@ -846,6 +863,39 @@ async function rejectTrade(tradeId) {
 	}
 
 	clearTradeMessageCache(tradeId);
+	return true;
+}
+
+async function rejectTrade(trade) {
+	const payload = {
+		requester: trade.requester,
+		receiver: trade.receiver,
+		offeredPlant: trade.offeredPlant,
+		requestedPlant: trade.requestedPlant,
+		status: "rejected",
+		message: trade.message || "",
+	};
+
+	const createResponse = await fetch(`${TRADE_API_BASE}/trades`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(payload),
+	});
+
+	if (!createResponse.ok) {
+		const errText = await readResponseText(createResponse);
+		console.error("POST rejected trade failed:", createResponse.status, errText);
+		alert("Kunde inte neka förfrågan.");
+		return;
+	}
+
+	const wasDeleted = await deleteTrade(trade._id);
+	if (!wasDeleted) {
+		return;
+	}
+
 	await refreshTradeUi();
 }
 
@@ -873,7 +923,12 @@ async function acceptTrade(trade) {
 		return;
 	}
 
-	await rejectTrade(trade._id);
+	const wasDeleted = await deleteTrade(trade._id);
+	if (!wasDeleted) {
+		return;
+	}
+
+	await refreshTradeUi();
 }
 
 function renderRequestsPanel() {
@@ -940,7 +995,9 @@ function renderRequestsPanel() {
 	listContainer.querySelectorAll("[data-reject-trade]").forEach((button) => {
 		button.addEventListener("click", () => {
 			const tradeId = button.getAttribute("data-reject-trade");
-			rejectTrade(tradeId);
+			const trade = userTradesCache.find((entry) => entry._id === tradeId);
+			if (!trade) return;
+			rejectTrade(trade);
 		});
 	});
 

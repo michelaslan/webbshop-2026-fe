@@ -25,13 +25,17 @@ applyFilter.addEventListener("click", async () => {
   selectedNames.forEach(name => params.append("name", name));
   selectedLevels.forEach(level => params.append("lightLevel", level));
 
+  const token = localStorage.getItem('token');
+  const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
   try {
-    const res = await fetch(`/plants?${params.toString()}`);
+    const res = await fetch(`/plants?${params.toString()}`, { headers });
     const plants = await res.json();
     window.dispatchEvent(new CustomEvent("plantsFiltered", { detail: plants }));
-    filterPanel.classList.remove("open");
   } catch (error) {
     console.error("Filter error:", error);
+  } finally {
+    filterPanel.classList.remove("open");
   }
 });
 
@@ -39,12 +43,16 @@ applyFilter.addEventListener("click", async () => {
 clearFilter.addEventListener("click", async () => {
   document.querySelectorAll(".filter-checkbox-item input").forEach(cb => cb.checked = false);
 
+  const token = localStorage.getItem('token');
+  const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
   try {
-    const res = await fetch("/plants");
+    const res = await fetch("/plants", { headers });
     const plants = await res.json();
     window.dispatchEvent(new CustomEvent("plantsFiltered", { detail: plants }));
-    filterPanel.classList.remove("open");
   } catch (error) {
     console.error("Clear filter error:", error);
+  } finally {
+    filterPanel.classList.remove("open");
   }
 });

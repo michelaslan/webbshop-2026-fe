@@ -16,6 +16,36 @@ html, body {
   width: 100vw;
 }
 
+/* ── Requests button ── */
+
+.requests-button {
+  position: absolute;
+  top: 16px;
+  right: 72px;
+  z-index: 1000;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f2937;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.requests-button:hover {
+  background: #ffffff;
+}
+
+.requests-button:active {
+  background: rgba(255, 255, 255, 0.86);
+}
+
 /* ── Profile button ── */
 
 .profile-button {
@@ -45,15 +75,24 @@ html, body {
   object-fit: contain;
 }
 
-/* ── Profile panel & edit panel ── */
+@media (max-width: 640px) {
+  .requests-button {
+    right: 68px;
+    padding: 0 10px;
+    font-size: 0.9rem;
+  }
+}
 
+/* ── Side panels ── */
+
+.requests-panel,
 .profile-panel,
 .profile-edit-panel {
   display: none;
   position: absolute;
   top: 0;
   right: 0;
-  height: 94vh;
+  height: 100vh;
   width: min(360px, 90vw);
   padding: 16px;
   background: white;
@@ -62,11 +101,23 @@ html, body {
   overflow-y: auto;
 }
 
+.requests-panel.open,
 .profile-panel.open,
 .profile-edit-panel.open {
   display: block;
 }
 
+.profile-edit-panel {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  z-index: 2;
+  background: #fff;
+  overflow-y: auto;
+}
+
+.requests-panel__header,
 .profile-panel__header {
   display: flex;
   justify-content: space-between;
@@ -74,6 +125,14 @@ html, body {
   gap: 16px;
 }
 
+.profile-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.requests-close,
 .panel-close,
 .profile-edit-close {
   border: none;
@@ -83,6 +142,30 @@ html, body {
   line-height: 1;
   padding: 4px;
   cursor: pointer;
+}
+
+.requests-panel__empty-state {
+  min-height: calc(100vh - 120px);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.requests-panel__empty-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #111;
+}
+
+.requests-panel__empty-text {
+  margin: 4px 0 0;
+  max-width: 320px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #111;
 }
 
 .profile-panel input,
@@ -197,6 +280,44 @@ html, body {
 
 .profile-action-button:active {
   background: #c7ccd2;
+}
+
+.profile-logout-button {
+  width: auto;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+  justify-self: start;
+  margin-top: 8px;
+}
+
+.profile-logout-button.is-logout {
+  background: #b91c1c;
+}
+
+.profile-logout-button.is-logout:hover {
+  background: #991b1b;
+}
+
+.profile-logout-button.is-logout:active {
+  background: #7f1d1d;
+}
+
+.profile-logout-button.is-login {
+  background: #16a34a;
+}
+
+.profile-logout-button.is-login:hover {
+  background: #15803d;
+}
+
+.profile-logout-button.is-login:active {
+  background: #166534;
 }
 
 .profile-edit-actions {
@@ -376,6 +497,33 @@ html, body {
   border-radius: 4px;
 }
 
+.profile-post-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.profile-post-delete {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #6b7280;
+  color: #fff;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.profile-post-delete:hover {
+  background: #4b5563;
+}
+
+.profile-post-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 #myPosts {
   list-style: none;
   margin: 0;
@@ -392,6 +540,276 @@ html, body {
   object-fit: cover;
   border: 3px solid white;
   box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.trade-map-icon-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.trade-popup-shell .leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.trade-popup-shell .leaflet-popup-content {
+  margin: 0;
+  width: min(410px, 78vw) !important;
+}
+
+.trade-popup {
+  position: relative;
+  padding: 20px;
+  background: #f9f9f9;
+  color: #1a1a1a;
+}
+
+.trade-popup__close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border: none;
+  background: transparent;
+  color: #7b7b7b;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.trade-popup__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.trade-popup__owner {
+  margin: 4px 0 12px;
+  color: #7a7a7a;
+  font-size: 0.72rem;
+}
+
+.trade-popup__image {
+  width: 100%;
+  height: 148px;
+  border-radius: 4px;
+  object-fit: cover;
+  margin-bottom: 12px;
+}
+
+.trade-popup__meta {
+  margin-bottom: 10px;
+}
+
+.trade-popup__meta p {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.trade-popup__address {
+  color: #6b7280;
+}
+
+.trade-status {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.trade-status--available {
+  color: #4b5563;
+}
+
+.trade-status--pending {
+  color: #4b5563;
+}
+
+.trade-status--accepted {
+  color: #4b5563;
+}
+
+.trade-status--rejected {
+  color: #4b5563;
+}
+
+.trade-popup__counter {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+
+.trade-popup__section-title {
+  margin: 0 0 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.trade-popup__counter-grid {
+  display: grid;
+  gap: 6px;
+}
+
+.trade-counter-field {
+  width: 100%;
+  border: 0px solid #e2e2e2;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #ffffff;
+  font-size: 0.73rem;
+}
+
+.trade-request-btn {
+  margin-top: 8px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: #11a44c;
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.trade-request-btn:hover {
+  background: #0f8f42;
+}
+
+.trade-request-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.trade-owner-note {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f9fafb;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  font-size: 0.74rem;
+}
+
+.requests-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.request-card {
+  border-radius: 8px;
+  padding: 14px;
+  background: #f8f8f9;
+}
+
+.request-card__status-label {
+  margin: 0 0 6px;
+  font-size: 0.74rem;
+  color: #6b7280;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.request-card__top {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.request-card__name {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #374151;
+}
+
+.request-card__intent {
+  margin: 2px 0 0;
+  color: #374151;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.request-card__message {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.request-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.request-card__status-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin: 0;
+  padding: 0 2px;
+}
+
+.request-card__message {
+  margin: 10px 0;
+  border-radius: 6px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  font-size: 0.84rem;
+  padding: 8px;
+}
+
+.request-card__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.request-card__actions button {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 9px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.request-reject {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.request-accept {
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.profile-post-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-post-edit {
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #6b7280;
+  color: #fff;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.profile-post-edit:hover {
+  background: #4b5563;
 }
 
 /* ── Login modal ── */

@@ -18,15 +18,13 @@ var inputCurrentPassword = document.getElementById('current-password');
 var inputNewPassword = document.getElementById('new-password');
 var inputConfirmPassword = document.getElementById('confirm-password');
 
-const storedUser = localStorage.getItem("user");
+const storedUser = sessionStorage.getItem("user");
 if (storedUser) {
     const user = JSON.parse(storedUser);
     if (profileName && user.name) profileName.textContent = user.name;
     if (profileEmail && user.email) profileEmail.textContent = user.email;
 }
 
-
-// Öppnar panelen
 if (profileButton) {
     profileButton.addEventListener('click', function () {
         if (!profilePanel) return;
@@ -34,7 +32,6 @@ if (profileButton) {
         profilePanel.classList.add('open');
         profilePanel.setAttribute('aria-hidden', 'false');
 
-        // Visa koordinater baserad på markörens position när man öppnar panelen
         if (window.marker && profileCoordinates) {
             var pos = marker.getLatLng();
             profileCoordinates.textContent =
@@ -43,7 +40,6 @@ if (profileButton) {
     });
 }
 
-// Stänger panelen när man klickar på stängknappen
 if (profileClose) {
     profileClose.addEventListener('click', function () {
         if (!profilePanel) return;
@@ -51,7 +47,6 @@ if (profileClose) {
         profilePanel.classList.remove('open');
         profilePanel.setAttribute('aria-hidden', 'true');
 
-        // Stäng redigeringspanelen också
         if (editPanel) {
             editPanel.classList.remove('open');
             editPanel.setAttribute('aria-hidden', 'true');
@@ -59,12 +54,10 @@ if (profileClose) {
     });
 }
 
-// Öppnar redigera-profilpanelen
 if (editButton) {
     editButton.addEventListener('click', function () {
         if (!editPanel) return;
 
-        // Fyll i nuvarande namn och email
         if (profileName && inputName) inputName.value = profileName.textContent.trim();
         if (profileEmail && inputEmail) inputEmail.value = profileEmail.textContent.trim();
         if (inputCurrentPassword) inputCurrentPassword.value = '';
@@ -76,7 +69,6 @@ if (editButton) {
     });
 }
 
-// Stänger redigeringspanelen
 if (editClose) editClose.addEventListener('click', function () {
     if (!editPanel) return;
     editPanel.classList.remove('open');
@@ -89,11 +81,9 @@ if (editCancel) editCancel.addEventListener('click', function () {
     editPanel.setAttribute('aria-hidden', 'true');
 });
 
-// Sparar ändringar i profilen
 if (editSave) editSave.addEventListener('click', function () {
     if (!profileName || !profileEmail || !inputName || !inputEmail) return;
 
-    // Kolla om nya lösenord matchar
     if (inputNewPassword.value && inputNewPassword.value !== inputConfirmPassword.value) {
         alert('De nya lösenorden matchar inte. Kontrollera och försök igen.');
         return;
@@ -102,14 +92,12 @@ if (editSave) editSave.addEventListener('click', function () {
     profileName.textContent = inputName.value || 'Du';
     profileEmail.textContent = inputEmail.value || 'du@exempel.se';
 
-    // Stäng redigeringspanelen efter sparning
     if (editPanel) {
         editPanel.classList.remove('open');
         editPanel.setAttribute('aria-hidden', 'true');
     }
 });
 
-// Uppdaterar koordinater när markören dras
 if (window.marker && profileCoordinates) {
     marker.on('dragend', function (e) {
         var pos = e.target.getLatLng();
@@ -118,7 +106,6 @@ if (window.marker && profileCoordinates) {
     });
 }
 
-// Uppdaterar koordinater när man klickar på kartan
 if (window.map && profileCoordinates) {
     map.on('click', function (e) {
         var pos = e.latlng;

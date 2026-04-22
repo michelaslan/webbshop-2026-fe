@@ -284,6 +284,11 @@ html, body {
   color: white;
   font-size: 0.9rem;
   cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.addPlant-panel button:not(.plantPanel-close):hover {
+  background-color: #2c6a72;
 }
 
 #upload {
@@ -294,6 +299,11 @@ html, body {
   color: white;
   font-size: 0.9rem;
   cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+#upload:hover {
+  background-color: #235430;
 }
 
 .addPlant-panel button.plantPanel-close {
@@ -310,14 +320,47 @@ html, body {
 
 /* ── Map popups & posts ── */
 
+.leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  padding: 0;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+}
+
+.leaflet-popup-tip-container {
+  margin-top: -1px;
+}
+
 .popupDiv {
-  max-width: 200px;
+  padding: 14px;
+  min-width: 160px;
+  max-width: 210px;
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+.popupDiv p {
+  margin: 3px 0;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.popupDiv p:first-child {
+  font-weight: 700;
+  font-size: 14px;
+  color: #111;
 }
 
 .popupDiv img {
   width: 100%;
-  margin-top: 8px;
-  border-radius: 4px;
+  margin-top: 10px;
+  border-radius: 8px;
+  object-fit: cover;
+  max-height: 130px;
 }
 
 .postDiv-profile {
@@ -337,6 +380,9 @@ html, body {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .divIcon {

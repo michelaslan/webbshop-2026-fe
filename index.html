@@ -33,7 +33,6 @@
     </div>
     <p class="form-warning hidden" id="login-error"></p>
     <button id="login-submit" class="panel-save" style="width:100%; margin-top: 8px;">Logga in</button>
-    <button id="close-login" class="panel-cancel" style="width:100%; margin-top: 8px;">Avbryt</button>
     <p class="modal-footer-text">Inget konto? <a>Registrera dig</a></p>
   </div>
 </div>
@@ -43,17 +42,18 @@
     <h2 class="modal-title">Registrera</h2>
     <p class="modal-subtitle">Skapa ett konto</p>
     <div class="form-group">
-      <label for="login-name">Namn</label>
+      <label for="register-name">Namn</label>
       <input class="panel-input" type="text" id="register-name" placeholder="Anna Karlsson" />
     </div>
     <div class="form-group">
-      <label for="login-email">E-post</label>
+      <label for="register-email">E-post</label>
       <input class="panel-input" type="email" id="register-email" placeholder="du@exempel.se" />
     </div>
     <div class="form-group">
-      <label for="login-password">Lösenord</label>
+      <label for="register-password">Lösenord</label>
       <input class="panel-input" type="password" id="register-password" placeholder="••••••••" />
     </div>
+    <p class="form-warning hidden" id="register-error"></p>
     <button id="register-submit" class="panel-save" style="width:100%; margin-top: 8px;">Registrera</button>
     <button id="close-register" class="panel-cancel" style="width:100%; margin-top: 8px;">Avbryt</button>
   </div>
@@ -175,8 +175,10 @@
       <option value="3">Extreme Light</option>
     </select>
     <input type="file" accept="image/*" id="imageUpload" style="display:none">
-    <button onclick="document.getElementById('imageUpload').click()">Upload Image</button>
-    <button id="upload">Upload</button>
+    <button type="button" onclick="document.getElementById('imageUpload').click()">Välj bild</button>
+    <span id="image-chosen" style="display:none; font-size:13px; color:#327345;">&#10003; Bild vald</span>
+    <button id="upload">Lägg till växt</button>
+    <p id="post-success" style="display:none; font-size:13px; color:#327345; margin:0;">&#10003; Växt tillagd!</p>
   </aside>
 
 </body>

@@ -158,6 +158,65 @@
   </aside>
 
   <div id="map"></div>
+  <button id="filterBtn" aria-label="Filtrera växter">
+  <span class="filter-icon">&#9776;</span>
+  </button>
+  <aside class="filter-panel" aria-hidden="true">
+  <button class="filter-panel-close" aria-label="Stäng filter">×</button>
+  <p class="panel-title">Filtrera växter</p>
+  <p class="panel-subtitle">Visa bara det du letar efter</p>
+
+  <div class="form-group" style="margin-top: 16px;">
+  <label>Växttyp</label>
+  <div class="filter-checkbox-list">
+    <label class="filter-checkbox-item"><input type="checkbox" value="Monstera" data-type="name"> Monstera</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Efeutute" data-type="name"> Efeutute</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Svärmorstunga" data-type="name"> Svärmorstunga</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Fredslilja" data-type="name"> Fredslilja</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Gummiträd" data-type="name"> Gummiträd</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Fiolbladsfikonträd" data-type="name"> Fiolbladsfikonträd</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Spindelplanta" data-type="name"> Spindelplanta</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="ZZ-växt" data-type="name"> ZZ-växt</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Filodendron" data-type="name"> Filodendron</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Pilea" data-type="name"> Pilea</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Aloe Vera" data-type="name"> Aloe Vera</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Echeveria" data-type="name"> Echeveria</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Jadeplanta" data-type="name"> Jadeplanta</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Kaktus" data-type="name"> Kaktus</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Haworthia" data-type="name"> Haworthia</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Orkidé" data-type="name"> Orkidé</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Afrikanskt Viol" data-type="name"> Afrikanskt Viol</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Kalanchoe" data-type="name"> Kalanchoe</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Anthurium" data-type="name"> Anthurium</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Begonia" data-type="name"> Begonia</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Murgröna" data-type="name"> Murgröna</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Tradescantia" data-type="name"> Tradescantia</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Gullranka" data-type="name"> Gullranka</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Hängande Ampellilja" data-type="name"> Hängande Ampellilja</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Passionsblomma" data-type="name"> Passionsblomma</label>
+    <label class="filter-checkbox-item"><input type="checkbox" value="Övrigt" data-type="name"> Övrigt</label>
+  </div>
+</div>  
+
+<div class="form-group" style="margin-top: 12px;">
+  <label>Ljusnivå</label>
+  <div class="filter-checkbox-list">
+    <label class="filter-checkbox-item">
+      <input type="checkbox" value="1" data-type="light"> Lågt ljus
+    </label>
+    <label class="filter-checkbox-item">
+      <input type="checkbox" value="2" data-type="light"> Normalt ljus
+    </label>
+    <label class="filter-checkbox-item">
+      <input type="checkbox" value="3" data-type="light"> Starkt ljus
+    </label>
+  </div>
+</div>
+
+  <button id="applyFilter" class="panel-save" style="width:100%; margin-top: 16px;">Använd filter</button>
+  <button id="clearFilter" class="panel-cancel" style="width:100%; margin-top: 8px;">Rensa filter</button>
+</aside>
+
   <button id="addPlantBtn">+</button>
   <aside class="addPlant-panel" aria-hidden="true">
     <button class="plantPanel-close" aria-label="Stäng profil">×</button>
@@ -202,5 +261,6 @@
     <p id="post-success" style="display:none; font-size:13px; color:#327345; margin:0;">&#10003; Växt tillagd!</p>
   </aside>
 
-</body>
+
+<script src="src/scripts/filter.js" defer></script></body>
 </html>

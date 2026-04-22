@@ -19,7 +19,7 @@ html, body {
 /* ── Requests button ── */
 
 .requests-button {
-  position: absolute;
+  position: fixed;
   top: 16px;
   right: 72px;
   z-index: 1000;
@@ -49,7 +49,7 @@ html, body {
 /* ── Profile button ── */
 
 .profile-button {
-  position: absolute;
+  position: fixed;
   top: 16px;
   right: 16px;
   z-index: 1000;
@@ -348,7 +348,7 @@ html, body {
 }
 /* ── Filter button ── */
 #filterBtn {
-  position: absolute;
+  position: fixed;
   bottom: 80px;
   left: 16px;
   z-index: 1000;
@@ -428,7 +428,7 @@ html, body {
 /* ── Add plant button & panel ── */
 
 #addPlantBtn {
-  position: absolute;
+  position: fixed;
   bottom: 16px;
   left: 16px;
   z-index: 1000;
@@ -998,4 +998,84 @@ html, body {
 /* ── register modal ── */
 #register-modal{
   display:none;
+}
+
+
+/* ===== RESPONSIVE FIXES ===== */
+
+/* Fix map (ta bort scroll bug) */
+#map {
+  width: 100%;
+  height: 100vh;
+}
+
+/* Gör alla floating knappar stabila */
+.requests-button,
+.profile-button,
+#addPlantBtn,
+#filterBtn {
+  position: fixed;
+}
+
+/* Justera positioner */
+.requests-button {
+  top: 16px;
+  right: 72px;
+}
+
+.profile-button {
+  top: 16px;
+  right: 16px;
+}
+
+#addPlantBtn {
+  bottom: 16px;
+  left: 16px;
+}
+
+#filterBtn {
+  bottom: 80px;
+  left: 16px;
+}
+
+/* ===== MOBIL ===== */
+@media (max-width: 768px) {
+
+  /* Paneler full width */
+  .requests-panel,
+  .profile-panel,
+  .filter-panel,
+  .addPlant-panel {
+    width: 100%;
+    border-radius: 0;
+  }
+
+  /* Mindre knappar */
+  .profile-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  #addPlantBtn,
+  #filterBtn {
+    width: 50px;
+    height: 50px;
+  }
+
+  /* Dölj text på requests */
+  .requests-button span {
+    display: none;
+  }
+
+  .requests-button {
+    right: 60px;
+    padding: 0 10px;
+  }
+}
+
+/* ===== EXTRA SMALL ===== */
+@media (max-width: 480px) {
+  .modal-box {
+    padding: 1.5rem;
+  }
 }

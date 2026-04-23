@@ -475,9 +475,8 @@ async function fetchAllTrades() {
 	const isAdmin = currentUser?.role === "admin";
 
 	try {
-		// ADMIN → alla trades
 		if (isAdmin) {
-			const res = await fetch(`${TRADE_API_BASE}/trades`, { headers });
+			const res = await fetch(`${TRADE_API_BASE}/trades/mine`, { headers });
 
 			if (!res.ok) return [];
 
@@ -620,7 +619,7 @@ function buildTradeRequestSection(plant, currentUser, isOwner, status) {
 	}
 
 	const buttonText = buildRequestButtonText(currentUser, status);
-	const isDisabled = !currentUser || status === "pending" || status === "accepted";
+	const isDisabled = !currentUser || status === "rejected" || status === "accepted" || status === "pending";
 
 	return `
 		<div class="trade-popup__counter">

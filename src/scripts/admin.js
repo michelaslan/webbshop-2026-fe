@@ -4,7 +4,7 @@ let adminRefreshTimer = null;
 
 // grab token from browser storage
 function getAdminToken() {
-  return localStorage.getItem("token") || sessionStorage.getItem("token") || "";
+  return localStorage.getItem("token") || "";
 }
 
 function getCurrentStoredUserRaw() {

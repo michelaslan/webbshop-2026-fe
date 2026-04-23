@@ -3,7 +3,7 @@ window.addEventListener("load", () => {
 });
 
 async function initializeAuthUi() {
-  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+  const token = localStorage.getItem("token");
   if (!token) {
     document.getElementById("login-modal").style.display = "flex";
     return;
@@ -105,7 +105,6 @@ document.getElementById("login-submit").addEventListener("click", async () => {
 
     if (res.ok) {
       localStorage.setItem("token", data.token);
-      sessionStorage.setItem("token", data.token);
       const existingUser = JSON.parse(localStorage.getItem("user") || "null");
       const fallbackUser = normalizeUserResponse(data.user || { email }, existingUser || undefined);
       storeUser(fallbackUser);

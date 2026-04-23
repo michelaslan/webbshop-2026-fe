@@ -1,12 +1,16 @@
 const TRADE_API_BASE = "https://webbshop-2026-be-g08.vercel.app";
 const myPosts = document.querySelector("#myPosts");
-const PLANT_COORD_OVERRIDES_KEY = "plantCoordOverrides";
+const LEGACY_SESSION_TOKEN_KEY = "token";
+const LEGACY_SESSION_USER_KEY = "user";
 
 let plantMarkers = [];
 let plantsCache = [];
 let userTradesCache = [];
+let allTradesCache = [];
+let filteredPlantIds = null;
+const knownUserNamesById = new Map();
+let authSnapshot = "";
 
-const MAX_IMAGE_DATAURL_BYTES = 58 * 1024;
 const MAX_PLANT_PAYLOAD_BYTES = 95 * 1024;
 const DEFAULT_MAP_POSITION = {
 	lat: 59.3293,
@@ -15,18 +19,31 @@ const DEFAULT_MAP_POSITION = {
 const PENDING_TRADE_STATUSES = ["pending", "posted"];
 const DEFAULT_USER_NAME = "Du";
 const DEFAULT_REQUEST_MESSAGE = "Hej! Jag är intresserad av din växt.";
+const DEFAULT_PLANT_IMAGE_URL = "https://placehold.co/600x400?text=Plant";
+const IMGBB_API_KEY = "331073604ea81cda0e079535d9847ea5";
 
 // auth
 function getToken() {
-	const token = localStorage.getItem("token");
-	if (!token) return "";
-	if (token.split(".").length !== 3) return "";
-	return token;
+	const localToken = localStorage.getItem("token");
+	if (localToken && localToken.split(".").length === 3) {
+		return localToken;
+	}
+
+	const sessionToken = sessionStorage.getItem(LEGACY_SESSION_TOKEN_KEY);
+	if (sessionToken && sessionToken.split(".").length === 3) {
+		// Keep legacy login scripts compatible with the current trade module.
+		localStorage.setItem("token", sessionToken);
+		return sessionToken;
+	}
+
+	return "";
 }
 
 function clearAuthAndPromptLogin(message) {
 	localStorage.removeItem("token");
 	localStorage.removeItem("user");
+	sessionStorage.removeItem(LEGACY_SESSION_TOKEN_KEY);
+	sessionStorage.removeItem(LEGACY_SESSION_USER_KEY);
 	window.dispatchEvent(new Event("auth-changed"));
 
 	if (message) {
@@ -46,31 +63,12 @@ function normalizeUserData(userData, fallbackUser) {
 		name: DEFAULT_USER_NAME,
 		email: "",
 	};
+	const data = userData || {};
 
-	if (!userData || typeof userData !== "object") {
-		return {
-			id: fallback.id,
-			name: fallback.name,
-			email: fallback.email,
-		};
-	}
-
-	let normalizedId = fallback.id;
-	if (userData._id !== undefined && userData._id !== null) {
-		normalizedId = userData._id;
-	} else if (userData.id !== undefined && userData.id !== null) {
-		normalizedId = userData.id;
-	}
-
-	let normalizedName = fallback.name;
-	if (userData.name) {
-		normalizedName = userData.name;
-	}
-
-	let normalizedEmail = fallback.email;
-	if (userData.email !== undefined && userData.email !== null) {
-		normalizedEmail = userData.email;
-	}
+	// The backend can name the user id in different ways
+	const normalizedId = data._id ?? data.id ?? data.userId ?? fallback.id;
+	const normalizedName = data.name ? String(data.name).trim() : fallback.name;
+	const normalizedEmail = data.email ?? fallback.email;
 
 	return {
 		id: normalizedId,
@@ -81,7 +79,10 @@ function normalizeUserData(userData, fallbackUser) {
 
 function getCurrentUser() {
 	try {
-		const userData = JSON.parse(localStorage.getItem("user") || "null");
+		let userData = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem(LEGACY_SESSION_USER_KEY) || "null");
+		if (userData && !localStorage.getItem("user")) {
+			localStorage.setItem("user", JSON.stringify(userData));
+		}
 		if (!userData) return null;
 		return normalizeUserData(userData);
 	} catch (error) {
@@ -93,6 +94,67 @@ function setCurrentUser(userData) {
 	const existing = getCurrentUser();
 	const updated = normalizeUserData(userData, existing);
 	localStorage.setItem("user", JSON.stringify(updated));
+	sessionStorage.setItem(LEGACY_SESSION_USER_KEY, JSON.stringify(updated));
+}
+
+function rememberUserName(userId, userName) {
+	const id = String(userId || "").trim();
+	const name = String(userName || "").trim();
+	if (!id || !name) return;
+	knownUserNamesById.set(id, name);
+}
+
+function getKnownUserName(userId) {
+	return String(knownUserNamesById.get(String(userId || "").trim()) || "").trim();
+}
+
+function syncKnownUserNameFromCurrentUser() {
+	const currentUser = getCurrentUser();
+	if (!currentUser || !currentUser.id) return;
+	rememberUserName(currentUser.id, currentUser.name);
+}
+
+function updateKnownUserNamesFromPlants(plants) {
+	if (!Array.isArray(plants)) return;
+	plants.forEach((plant) => {
+		if (!plant) return;
+		const ownerId = getPlantOwnerId(plant.owner);
+		const ownerName = getPlantOwnerName(plant.owner);
+		if (ownerId && ownerName && ownerName !== "Användare") {
+			rememberUserName(ownerId, ownerName);
+		}
+	});
+}
+
+function updateKnownUserNamesFromTrades(trades) {
+	if (!Array.isArray(trades)) return;
+	trades.forEach((trade) => {
+		if (!trade) return;
+
+		if (trade.requester && trade.requester.name) {
+			const requesterId = getIdFromValue(trade.requester);
+			const requesterName = String(trade.requester.name || "").trim();
+			rememberUserName(requesterId, requesterName);
+		}
+
+		if (trade.receiver && trade.receiver.name) {
+			const receiverId = getIdFromValue(trade.receiver);
+			const receiverName = String(trade.receiver.name || "").trim();
+			rememberUserName(receiverId, receiverName);
+		}
+	});
+}
+
+function getAuthSnapshot() {
+	const token = getToken();
+	const currentUser = getCurrentUser();
+	const currentUserId = currentUser && currentUser.id ? String(currentUser.id) : "";
+	return `${token ? "1" : "0"}:${currentUserId}`;
+}
+
+function hasRealUserName(user) {
+	const name = String((user && user.name) || "").trim();
+	return Boolean(name && name !== DEFAULT_USER_NAME);
 }
 
 async function ensureCurrentUserId() {
@@ -100,7 +162,8 @@ async function ensureCurrentUserId() {
 	const currentUser = getCurrentUser();
 
 	if (!token) return currentUser;
-	if (currentUser && currentUser.id) return currentUser;
+	// No need to call /auth/me if we already have a user saved
+	if (currentUser && currentUser.id && hasRealUserName(currentUser)) return currentUser;
 
 	try {
 		const response = await fetch(`${TRADE_API_BASE}/auth/me`, {
@@ -111,8 +174,9 @@ async function ensureCurrentUserId() {
 
 		if (!response.ok) return currentUser;
 
-		const me = await response.json();
-		const normalized = normalizeUserData(me, currentUser);
+		const mePayload = await response.json();
+		const meUser = mePayload.user;
+		const normalized = normalizeUserData(meUser, currentUser);
 		setCurrentUser(normalized);
 		return normalized;
 	} catch (error) {
@@ -149,76 +213,35 @@ function handleUnauthorizedResponse(response, message) {
 	return false;
 }
 
-function readPlantCoordOverrides() {
-	try {
-		return JSON.parse(localStorage.getItem(PLANT_COORD_OVERRIDES_KEY) || "{}");
-	} catch (error) {
-		return {};
-	}
-}
-
-function savePlantCoordOverrides(overrides) {
-	localStorage.setItem(PLANT_COORD_OVERRIDES_KEY, JSON.stringify(overrides));
-}
-
-function getPlantCoordOverride(plantId) {
-	if (!plantId) return null;
-	const overrides = readPlantCoordOverrides();
-	const entry = overrides[String(plantId)];
-	if (!entry) return null;
-
-	if (!Number.isFinite(Number(entry.lat)) || !Number.isFinite(Number(entry.lng))) {
-		return null;
-	}
-
-	return {
-		lat: Number(entry.lat),
-		lng: Number(entry.lng),
-	};
-}
-
-function setPlantCoordOverride(plantId, lat, lng) {
-	if (!plantId) return;
-	if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng))) return;
-
-	const overrides = readPlantCoordOverrides();
-	overrides[String(plantId)] = {
-		lat: Number(lat),
-		lng: Number(lng),
-		updatedAt: Date.now(),
-	};
-	savePlantCoordOverrides(overrides);
-}
-
 function closeTradePopup() {
 	map.closePopup();
 }
 
 function isValidObjectId(id) {
-	const value = id === null || id === undefined ? "" : id;
-	return /^[a-f0-9]{24}$/i.test(String(value));
+	return /^[a-f0-9]{24}$/i.test(String(id || ""));
 }
 
 function getPlantId(plant) {
-	if (!plant || typeof plant !== "object") return "";
-
-	if (plant._id !== undefined && plant._id !== null) {
-		return plant._id;
-	}
-
-	if (plant.id !== undefined && plant.id !== null) {
-		return plant.id;
-	}
-
-	return "";
+	if (!plant) return "";
+	return plant._id || plant.id || "";
 }
 
 function getLocationCoordinates(plant) {
-	if (!plant || !plant.location || !Array.isArray(plant.location.coordinates)) {
-		return [];
+	const coords = plant && plant.location && plant.location.coordinates;
+	if (!coords) return [];
+	if (Array.isArray(coords)) {
+		return coords;
 	}
 
-	return plant.location.coordinates;
+	if (coords) {
+		const latValue = toNumberOrNull(coords.lat);
+		const lngValue = toNumberOrNull(coords.lng);
+		if (latValue !== null && lngValue !== null) {
+			return [lngValue, latValue];
+		}
+	}
+
+	return [];
 }
 
 function toNumberOrNull(value) {
@@ -228,47 +251,97 @@ function toNumberOrNull(value) {
 
 function getPlantOwnerId(owner) {
 	if (typeof owner === "string") return owner;
-	if (owner && typeof owner === "object") {
-		if (owner._id !== undefined && owner._id !== null) {
-			return owner._id;
-		}
-	}
-
-	return "";
+	if (!owner) return "";
+	return owner._id || owner.id || "";
 }
 
 function getPlantOwnerName(owner) {
-	if (owner && typeof owner === "object" && owner.name) {
+	if (typeof owner === "string") {
+		const knownName = getKnownUserName(owner);
+		if (knownName) {
+			return knownName;
+		}
+	}
+
+	if (owner && owner.name) {
 		return owner.name;
+	}
+
+	if (owner) {
+		const ownerId = getPlantOwnerId(owner);
+		const knownName = getKnownUserName(ownerId);
+		if (knownName) {
+			return knownName;
+		}
 	}
 
 	return "Användare";
 }
 
-function getStoredTradeMessages() {
-	try {
-		return JSON.parse(localStorage.getItem("tradeMessages") || "{}");
-	} catch (error) {
-		return {};
+function getPlantAddress(plant) {
+	if (plant && plant.location && plant.location.address && plant.location.address.trim()) {
+		return plant.location.address.trim();
 	}
-}
 
-function saveStoredTradeMessages(messages) {
-	localStorage.setItem("tradeMessages", JSON.stringify(messages));
+	if (plant && plant.address && plant.address.trim()) {
+		return plant.address.trim();
+	}
+
+	if (plant && plant.display_name && plant.display_name.trim()) {
+		return plant.display_name.trim();
+	}
+
+	return "Okänd adress";
 }
 
 function isPendingStatus(status) {
-	const value = status === null || status === undefined ? "" : status;
-	return PENDING_TRADE_STATUSES.includes(String(value));
+	return PENDING_TRADE_STATUSES.includes(String(status || ""));
+}
+
+function isPlantClosedForRequests(plant) {
+	if (!plant || typeof plant !== "object") return false;
+
+	const statusValue = String(plant.status || "").trim().toLowerCase();
+	const statusMeansClosed =
+		statusValue === "accepted" ||
+		statusValue === "godkand" ||
+		statusValue === "godkänd" ||
+		statusValue === "traded" ||
+		statusValue === "closed" ||
+		statusValue === "sold" ||
+		statusValue === "unavailable";
+
+	return statusMeansClosed || plant.isAvailable === false;
 }
 
 function getPlantFromCache(plantId) {
 	return plantsCache.find((plant) => plant.id === plantId);
 }
 
+function setFilteredPlantIdsFromPlants(plants) {
+	if (!Array.isArray(plants)) {
+		filteredPlantIds = null;
+		return;
+	}
+
+	const ids = new Set();
+	plants.forEach((plant) => {
+		const plantId = getPlantId(plant);
+		if (!plantId) return;
+		ids.add(String(plantId));
+	});
+
+	filteredPlantIds = ids;
+}
+
+function getVisiblePlants() {
+	if (!filteredPlantIds) return plantsCache;
+	return plantsCache.filter((plant) => filteredPlantIds.has(String(plant.id)));
+}
+
 function getCurrentUserId() {
 	const currentUser = getCurrentUser();
-	if (!currentUser || currentUser.id === null || currentUser.id === undefined) {
+	if (!currentUser || !currentUser.id) {
 		return "";
 	}
 
@@ -279,22 +352,19 @@ function getCurrentUserId() {
 // turn plant data from the API into one simple object shape
 function normalizePlant(plant) {
 	const plantId = getPlantId(plant);
-	const localOverride = getPlantCoordOverride(plantId);
+	const ownerId = getPlantOwnerId(plant.owner);
+	const ownerNameFromTrade = getKnownUserName(ownerId);
 	const locationCoordinates = getLocationCoordinates(plant);
 	const lngFromPlant = toNumberOrNull(plant && plant.lng);
 	const latFromPlant = toNumberOrNull(plant && plant.lat);
 	const lngFromLocation = toNumberOrNull(locationCoordinates[0]);
 	const latFromLocation = toNumberOrNull(locationCoordinates[1]);
-	const lngFromOverride = localOverride ? toNumberOrNull(localOverride.lng) : null;
-	const latFromOverride = localOverride ? toNumberOrNull(localOverride.lat) : null;
 
 	let lng = DEFAULT_MAP_POSITION.lng;
 	if (lngFromPlant !== null) {
 		lng = lngFromPlant;
 	} else if (lngFromLocation !== null) {
 		lng = lngFromLocation;
-	} else if (lngFromOverride !== null) {
-		lng = lngFromOverride;
 	}
 
 	let lat = DEFAULT_MAP_POSITION.lat;
@@ -302,20 +372,19 @@ function normalizePlant(plant) {
 		lat = latFromPlant;
 	} else if (latFromLocation !== null) {
 		lat = latFromLocation;
-	} else if (latFromOverride !== null) {
-		lat = latFromOverride;
 	}
 
 	return {
 		id: plantId,
-		owner: getPlantOwnerId(plant.owner),
-		ownerName: getPlantOwnerName(plant.owner),
+		owner: ownerId,
+		ownerName: ownerNameFromTrade || getPlantOwnerName(plant.owner),
 		name: plant.name || "Växt",
 		species: plant.species || "",
 		description: plant.description || "Ingen beskrivning.",
 		imageUrl: plant.imageUrl || "",
 		lightLevel: String(plant.lightLevel || "2"),
-		address: (plant.location && plant.location.address) || "Okänd adress",
+		status: String(plant.status || "").trim().toLowerCase(),
+		address: getPlantAddress(plant),
 		lat,
 		lng,
 		isAvailable: plant.isAvailable !== false,
@@ -347,30 +416,80 @@ function getSelectedMarkerLatLng() {
 
 // api
 async function fetchAllPlants() {
-	const response = await fetch(`${TRADE_API_BASE}/plants`);
+	const token = getToken();
+	const headers = token
+		? {
+				Authorization: `Bearer ${token}`,
+		  }
+		: {};
+
+	const response = await fetch(`${TRADE_API_BASE}/plants`, { headers });
 	if (!response.ok) {
 		throw new Error(`Failed GET /plants: ${response.status}`);
 	}
-	const plants = await response.json();
-	return Array.isArray(plants) ? plants.map(normalizePlant) : [];
+
+	const payload = await response.json();
+	const plants = Array.isArray(payload)
+		? payload
+		: Array.isArray(payload && payload.plants)
+			? payload.plants
+			: [];
+
+	const validPlants = plants.filter((plant) => plant && typeof plant === "object");
+	updateKnownUserNamesFromPlants(validPlants);
+	return validPlants.map(normalizePlant);
 }
 
-async function fetchTradesForUser(userId) {
-	if (!isValidObjectId(userId)) return [];
+async function fetchTradesForUser() {
+	const token = getToken();
+	if (!token) return [];
 
-	const response = await fetch(`${TRADE_API_BASE}/trades/user/${userId}`);
-	if (!response.ok) {
-		throw new Error(`Failed GET /trades/user/:id: ${response.status}`);
+	const headers = token
+		? {
+				Authorization: `Bearer ${token}`,
+		  }
+		: {};
+
+	const mineResponse = await fetch(`${TRADE_API_BASE}/trades/mine`, { headers });
+	if (mineResponse.ok) {
+		const mineTrades = await mineResponse.json();
+		return Array.isArray(mineTrades) ? mineTrades : [];
 	}
-	const trades = await response.json();
-	return Array.isArray(trades) ? trades : [];
+
+	if (handleUnauthorizedResponse(mineResponse, "Din session har gått ut. Logga in igen.")) {
+		return [];
+	}
+
+	throw new Error(`Failed GET /trades/mine: ${mineResponse.status}`);
 }
 
 async function fetchAllTrades() {
-	const response = await fetch(`${TRADE_API_BASE}/trades`);
-	if (!response.ok) return [];
-	const trades = await response.json();
-	return Array.isArray(trades) ? trades : [];
+	const token = getToken();
+	if (!token) return [];
+
+	const headers = token
+		? {
+				Authorization: `Bearer ${token}`,
+		  }
+		: {};
+
+	const response = await fetch(`${TRADE_API_BASE}/trades`, { headers });
+
+	if (response.ok) {
+		const trades = await response.json();
+		return Array.isArray(trades) ? trades : [];
+	}
+
+	if (handleUnauthorizedResponse(response, "Din session har gått ut. Logga in igen.")) {
+		return [];
+	}
+
+	// normal users may be blocked from /trades using /trades/mine instead
+	const mineResponse = await fetch(`${TRADE_API_BASE}/trades/mine`, { headers });
+	if (!mineResponse.ok) return [];
+
+	const mineTrades = await mineResponse.json();
+	return Array.isArray(mineTrades) ? mineTrades : [];
 }
 
 function lightLevelLabel(value) {
@@ -386,42 +505,64 @@ function getTradeStatusLabel(status) {
 	return "Tillgänglig";
 }
 
-function getPlantIdsWithPendingRequests(allTrades) {
-	const pendingTrades = allTrades.filter((trade) => isPendingStatus(trade.status));
+function getPlantIdsLockedByAcceptedTrades(allTrades) {
+	const acceptedTrades = Array.isArray(allTrades)
+		? allTrades.filter((trade) => String(trade && trade.status ? trade.status : "") === "accepted")
+		: [];
 
-	return new Set(
-		pendingTrades.map((trade) => {
-			if (trade.requestedPlant === null || trade.requestedPlant === undefined) {
-				return "";
-			}
+	const lockedPlantIds = new Set();
+	acceptedTrades.forEach((trade) => {
+		const requestedPlantId = getIdFromValue(trade && trade.requestedPlant);
+		const offeredPlantId = getIdFromValue(trade && trade.offeredPlant);
 
-			return String(trade.requestedPlant);
-		}),
-	);
+		if (requestedPlantId) lockedPlantIds.add(String(requestedPlantId));
+		if (offeredPlantId) lockedPlantIds.add(String(offeredPlantId));
+	});
+
+	return lockedPlantIds;
 }
 
-function getPlantTradeStatus(plant, allTrades) {
+function getPlantTradeStatus(plant, allTrades, currentUserId) {
+	const plantId = String(plant.id);
+	const userId = String(currentUserId || "");
+	const acceptedLockedPlantIds = getPlantIdsLockedByAcceptedTrades(allTrades);
 	const matchingTrades = allTrades.filter((trade) => {
 		return getIdFromValue(trade.requestedPlant) === String(plant.id);
 	});
 
-	if (matchingTrades.some((trade) => isPendingStatus(trade.status))) {
-		return "pending";
-	}
-
-	if (matchingTrades.some((trade) => trade.status === "accepted")) {
+	// checking in this order so we always return one clear status
+	const hasAcceptedTrade = matchingTrades.some((trade) => trade.status === "accepted");
+	if (acceptedLockedPlantIds.has(plantId) || hasAcceptedTrade) {
 		return "accepted";
 	}
 
-	if (matchingTrades.some((trade) => trade.status === "rejected")) {
+	const myPending = matchingTrades.some((trade) => {
+		if (!isPendingStatus(trade.status)) return false;
+		return getIdFromValue(trade.requester) === userId;
+	});
+
+	if (myPending) {
+		return "pending";
+	}
+
+	const myRejected = matchingTrades.some((trade) => {
+		if (String(trade && trade.status ? trade.status : "") !== "rejected") return false;
+		return getIdFromValue(trade.requester) === userId;
+	});
+
+	if (myRejected) {
 		return "rejected";
+	}
+
+	if (isPlantClosedForRequests(plant)) {
+		return "accepted";
 	}
 
 	if (plant.isAvailable) {
 		return "available";
 	}
 
-	return "pending";
+	return "available";
 }
 
 function createPlantIcon(plant) {
@@ -437,9 +578,16 @@ function createPlantIcon(plant) {
 
 // popup ui
 function buildOfferSelectOptions(currentUser) {
-	const myPlants = plantsCache.filter((plant) => plant.owner === currentUser.id);
+	const acceptedLockedPlantIds = getPlantIdsLockedByAcceptedTrades(allTradesCache);
+	const myPlants = plantsCache.filter((plant) => {
+		const isMine = String(plant.owner) === String(currentUser.id);
+		const hasDbId = isValidObjectId(plant.id);
+		const isLockedByAcceptedTrade = acceptedLockedPlantIds.has(String(plant.id));
+		const isClosedAtPlantLevel = isPlantClosedForRequests(plant);
+		return isMine && hasDbId && !isLockedByAcceptedTrade && !isClosedAtPlantLevel;
+	});
 	if (myPlants.length === 0) {
-		return `<option value="">Du har inga egna trades att erbjuda</option>`;
+		return `<option value="">Du har inga tillgängliga trades att erbjuda</option>`;
 	}
 
 	return [
@@ -532,6 +680,31 @@ async function sendTradeRequest(requestedPlantId) {
 		return;
 	}
 
+	if (isPlantClosedForRequests(requestedPlant)) {
+		alert("Denna trade är redan godkänd och tar inte emot fler förfrågningar.");
+		await refreshTradeUi();
+		return;
+	}
+
+	// Recheck with latest plant state from the server
+	try {
+		const latestPlants = await fetchAllPlants();
+		const latestRequestedPlant = latestPlants.find((plant) => String(plant.id) === String(requestedPlantId));
+		if (!latestRequestedPlant) {
+			alert("Kunde inte hitta vald trade.");
+			await refreshTradeUi();
+			return;
+		}
+
+		if (isPlantClosedForRequests(latestRequestedPlant)) {
+			alert("Denna trade är redan godkänd och tar inte emot fler förfrågningar.");
+			await refreshTradeUi();
+			return;
+		}
+	} catch (error) {
+		console.error("Failed to validate latest plant status before request:", error);
+	}
+
 	const offerSelect = document.querySelector(`[data-offered-plant="${requestedPlantId}"]`);
 	const messageInput = document.querySelector(`[data-counter-message="${requestedPlantId}"]`);
 
@@ -548,6 +721,30 @@ async function sendTradeRequest(requestedPlantId) {
 	if (!isValidObjectId(offeredPlantId)) {
 		alert("Välj en av dina egna trades som motbud.");
 		return;
+	}
+
+	const offeredPlant = getPlantFromCache(offeredPlantId);
+	if (!offeredPlant || String(offeredPlant.owner) !== String(currentUser.id)) {
+		alert("Du kan bara använda dina egna tillgängliga trades som motbud.");
+		return;
+	}
+
+	if (isPlantClosedForRequests(offeredPlant)) {
+		alert("Den valda motbudsväxten är redan godkänd och kan inte användas igen.");
+		await refreshTradeUi();
+		return;
+	}
+
+	try {
+		const latestTrades = await fetchAllTrades();
+		const acceptedLockedPlantIds = getPlantIdsLockedByAcceptedTrades(latestTrades);
+		if (acceptedLockedPlantIds.has(String(offeredPlantId))) {
+			alert("Den valda motbudsväxten är redan godkänd och kan inte användas igen.");
+			await refreshTradeUi();
+			return;
+		}
+	} catch (error) {
+		console.error("Failed to validate latest trade status before request:", error);
 	}
 
 	if (!isValidObjectId(requestedPlant.owner) || !isValidObjectId(currentUser.id)) {
@@ -576,23 +773,15 @@ async function sendTradeRequest(requestedPlantId) {
 	if (!response.ok) {
 		const errText = await readResponseText(response);
 		console.error("POST /trades failed:", response.status, errText);
+
+		if (response.status === 409 || response.status === 422) {
+			alert("Denna trade är inte längre tillgänglig för nya förfrågningar.");
+			await refreshTradeUi();
+			return;
+		}
+
 		alert("Kunde inte skicka förfrågan just nu.");
 		return;
-	}
-
-	// Cache the message locally in case the backend doesn't return it
-	if (message) {
-		try {
-			const created = await response.clone().json();
-			const newTradeId = getIdFromValue(created);
-			if (newTradeId) {
-				const stored = getStoredTradeMessages();
-				stored[newTradeId] = message;
-				saveStoredTradeMessages(stored);
-			}
-		} catch (error) {
-			// missing message cache must not block trade creation
-		}
 	}
 
 	closeTradePopup();
@@ -614,9 +803,11 @@ function renderPlantMarkers(allTrades) {
 	plantMarkers = [];
 
 	const currentUser = getCurrentUser();
+	const visiblePlants = getVisiblePlants();
 
-	plantsCache.forEach((plant) => {
-		const status = getPlantTradeStatus(plant, allTrades);
+	visiblePlants.forEach((plant) => {
+		const currentUserId = currentUser && currentUser.id ? String(currentUser.id) : "";
+		const status = getPlantTradeStatus(plant, allTrades, currentUserId);
 
 		const plantMarker = L.marker([plant.lat, plant.lng], {
 			icon: createPlantIcon(plant),
@@ -785,17 +976,22 @@ function resolveTradePlantName(plantId) {
 
 // not working yet
 function resolveTradeRequesterName(trade) {
-	if (trade && trade.requester && typeof trade.requester === "object") {
+	if (trade && trade.requester && trade.requester.name) {
 		const requesterName = String(trade.requester.name || "").trim();
 		if (requesterName) {
 			return requesterName;
 		}
 	}
 
-	let offeredPlantId = "";
 	if (trade) {
-		offeredPlantId = getIdFromValue(trade.offeredPlant);
+		const requesterId = getIdFromValue(trade.requester);
+		const knownRequesterName = getKnownUserName(requesterId);
+		if (knownRequesterName) {
+			return knownRequesterName;
+		}
 	}
+
+	const offeredPlantId = trade ? getIdFromValue(trade.offeredPlant) : "";
 
 	if (offeredPlantId) {
 		const offeredPlant = getPlantFromCache(offeredPlantId);
@@ -804,11 +1000,7 @@ function resolveTradeRequesterName(trade) {
 		}
 	}
 
-	let requesterIdTail = "";
-	if (trade) {
-		const requesterId = getIdFromValue(trade.requester);
-		requesterIdTail = requesterId.slice(-6);
-	}
+	const requesterIdTail = trade ? getIdFromValue(trade.requester).slice(-6) : "";
 
 	if (requesterIdTail) {
 		return `Användare ${requesterIdTail}`;
@@ -819,8 +1011,6 @@ function resolveTradeRequesterName(trade) {
 }
 
 function getTradeMessage(trade) {
-	const cachedMessages = getStoredTradeMessages();
-
 	let messageFromTrade = "";
 	if (trade.message !== null && trade.message !== undefined) {
 		messageFromTrade = String(trade.message).trim();
@@ -830,105 +1020,84 @@ function getTradeMessage(trade) {
 		return messageFromTrade;
 	}
 
-	let cachedMessageValue = "";
-	if (cachedMessages[trade._id] !== null && cachedMessages[trade._id] !== undefined) {
-		cachedMessageValue = cachedMessages[trade._id];
-	}
-
-	const messageFromCache = String(cachedMessageValue).trim();
-	if (messageFromCache) {
-		return messageFromCache;
-	}
-
 	return DEFAULT_REQUEST_MESSAGE;
 }
 
-function clearTradeMessageCache(tradeId) {
-	const stored = getStoredTradeMessages();
-	delete stored[String(tradeId)];
-	saveStoredTradeMessages(stored);
-}
-
-// incoming request
-async function deleteTrade(tradeId) {
-	const response = await fetch(`${TRADE_API_BASE}/trades/${tradeId}`, {
-		method: "DELETE",
-	});
-
-	if (!response.ok) {
-		const errText = await readResponseText(response);
-		console.error("DELETE /trades/:id failed:", response.status, errText);
-		alert("Kunde inte neka förfrågan.");
-		return;
-	}
-
-	clearTradeMessageCache(tradeId);
-	return true;
-}
-
 async function rejectTrade(trade) {
-	const payload = {
-		requester: trade.requester,
-		receiver: trade.receiver,
-		offeredPlant: trade.offeredPlant,
-		requestedPlant: trade.requestedPlant,
-		status: "rejected",
-		message: trade.message || "",
-	};
+	const token = getToken();
+	if (!token) {
+		alert("Du måste vara inloggad.");
+		return;
+	}
 
-	const createResponse = await fetch(`${TRADE_API_BASE}/trades`, {
-		method: "POST",
+	const updateResponse = await fetch(`${TRADE_API_BASE}/trades/${trade._id}/reject`, {
+		method: "PUT",
 		headers: {
-			"Content-Type": "application/json",
+			Authorization: `Bearer ${token}`,
 		},
-		body: JSON.stringify(payload),
 	});
 
-	if (!createResponse.ok) {
-		const errText = await readResponseText(createResponse);
-		console.error("POST rejected trade failed:", createResponse.status, errText);
-		alert("Kunde inte neka förfrågan.");
+	if (updateResponse.ok) {
+		await refreshTradeUi();
 		return;
 	}
 
-	const wasDeleted = await deleteTrade(trade._id);
-	if (!wasDeleted) {
-		return;
-	}
-
-	await refreshTradeUi();
+	const errText = await readResponseText(updateResponse);
+	console.error("Reject trade failed:", updateResponse.status, errText);
+	alert("Kunde inte neka förfrågan.");
 }
 
 async function acceptTrade(trade) {
-	const payload = {
-		requester: trade.requester,
-		receiver: trade.receiver,
-		offeredPlant: trade.offeredPlant,
-		requestedPlant: trade.requestedPlant,
-		status: "accepted",
+	const token = getToken();
+	if (!token) {
+		alert("Du måste vara inloggad.");
+		return;
+	}
+
+	const markPlantsAsAccepted = async () => {
+		const requestedPlantId = getIdFromValue(trade && trade.requestedPlant);
+		const offeredPlantId = getIdFromValue(trade && trade.offeredPlant);
+		const plantIds = [requestedPlantId, offeredPlantId].filter((plantId) => isValidObjectId(plantId));
+
+		if (plantIds.length === 0) return;
+
+		await Promise.all(
+			plantIds.map(async (plantId) => {
+				try {
+					await fetch(`${TRADE_API_BASE}/plants/${plantId}`, {
+						method: "PUT",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${token}`,
+						},
+						body: JSON.stringify({
+							status: "accepted",
+							isAvailable: false,
+						}),
+					});
+				} catch (error) {
+					console.error("Failed to mark accepted plant unavailable:", error);
+				}
+			}),
+		);
 	};
 
-	const createResponse = await fetch(`${TRADE_API_BASE}/trades`, {
-		method: "POST",
+	const updateResponse = await fetch(`${TRADE_API_BASE}/trades/${trade._id}/accept`, {
+		method: "PUT",
 		headers: {
-			"Content-Type": "application/json",
+			Authorization: `Bearer ${token}`,
 		},
-		body: JSON.stringify(payload),
 	});
 
-	if (!createResponse.ok) {
-		const errText = await readResponseText(createResponse);
-		console.error("POST accepted trade failed:", createResponse.status, errText);
-		alert("Kunde inte godkänna förfrågan.");
+	if (updateResponse.ok) {
+		await markPlantsAsAccepted();
+		await refreshTradeUi();
 		return;
 	}
 
-	const wasDeleted = await deleteTrade(trade._id);
-	if (!wasDeleted) {
-		return;
-	}
-
-	await refreshTradeUi();
+	const errText = await readResponseText(updateResponse);
+	console.error("Accept trade failed:", updateResponse.status, errText);
+	alert("Kunde inte godkänna förfrågan.");
 }
 
 function renderRequestsPanel() {
@@ -1012,93 +1181,32 @@ function renderRequestsPanel() {
 }
 
 // image handling
-function estimateDataUrlBytes(dataUrl) {
-	const safeDataUrl = dataUrl ? dataUrl : "";
-	const commaIndex = String(safeDataUrl).indexOf(",");
-	if (commaIndex < 0) return 0;
-	// remove data URL prefix first
-	const base64Part = dataUrl.slice(commaIndex + 1);
-	return Math.floor((base64Part.length * 3) / 4);
-}
-
 function estimateJsonBytes(value) {
+	// simple size check
 	return new Blob([JSON.stringify(value)]).size;
 }
 
-function loadImageFromDataUrl(dataUrl) {
-	return new Promise((resolve, reject) => {
-		const img = new Image();
-		img.onload = () => resolve(img);
-		img.onerror = reject;
-		img.src = dataUrl;
+async function uploadImageToImgBB(file) {
+	// Upload to ImgBB first then store only the URL in our own database
+	const formData = new FormData();
+	formData.append("image", file);
+
+	const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+		method: "POST",
+		body: formData,
 	});
-}
 
-function convertFileToBase64(file) {
-	if (typeof toBase64 === "function") {
-		return toBase64(file);
+	if (!response.ok) {
+		const errText = await readResponseText(response);
+		throw new Error(`ImgBB upload failed: ${response.status} ${errText}`);
 	}
 
-	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => resolve(reader.result);
-		reader.onerror = reject;
-		reader.readAsDataURL(file);
-	});
-}
-
-async function toOptimizedBase64(file) {
-	const originalDataUrl = await convertFileToBase64(file);
-	if (estimateDataUrlBytes(originalDataUrl) <= MAX_IMAGE_DATAURL_BYTES) {
-		return originalDataUrl;
+	const data = await response.json();
+	if (data && data.success && data.data && data.data.url) {
+		return String(data.data.url);
 	}
 
-	const img = await loadImageFromDataUrl(originalDataUrl);
-	let width = img.naturalWidth || img.width;
-	let height = img.naturalHeight || img.height;
-
-	const maxSide = 1280;
-	if (Math.max(width, height) > maxSide) {
-		const scale = maxSide / Math.max(width, height);
-		width = Math.max(1, Math.round(width * scale));
-		height = Math.max(1, Math.round(height * scale));
-	}
-
-	const canvas = document.createElement("canvas");
-	const ctx = canvas.getContext("2d");
-	if (!ctx) return originalDataUrl;
-
-	const MIN_QUALITY = 0.38;
-	const MIN_SIDE = 420;
-	let quality = 0.82;
-	let resultDataUrl = originalDataUrl;
-
-	// lower quality and size until it fits
-	while (true) {
-		canvas.width = width;
-		canvas.height = height;
-		ctx.clearRect(0, 0, width, height);
-		ctx.drawImage(img, 0, 0, width, height);
-		resultDataUrl = canvas.toDataURL("image/jpeg", quality);
-
-		if (estimateDataUrlBytes(resultDataUrl) <= MAX_IMAGE_DATAURL_BYTES) {
-			return resultDataUrl;
-		}
-
-		if (quality > MIN_QUALITY) {
-			quality = Math.max(MIN_QUALITY, quality - 0.08);
-			continue;
-		}
-
-		if (Math.max(width, height) > MIN_SIDE) {
-			width = Math.max(1, Math.round(width * 0.8));
-			height = Math.max(1, Math.round(height * 0.8));
-			quality = 0.58;
-			continue;
-		}
-
-		return resultDataUrl;
-	}
+	throw new Error("ImgBB upload failed: invalid response payload");
 }
 
 // create plant trade
@@ -1107,7 +1215,7 @@ function shrinkPlantPayload(payload) {
 		name: payload.name,
 		species: payload.species,
 		description: payload.description.slice(0, 80),
-		imageUrl: "",
+		imageUrl: payload.imageUrl || DEFAULT_PLANT_IMAGE_URL,
 		lightLevel: payload.lightLevel,
 		lat: payload.lat,
 		lng: payload.lng,
@@ -1118,12 +1226,154 @@ function shrinkPlantPayload(payload) {
 	};
 }
 
+function buildPlantPayloadVariants(payload) {
+	const variants = [];
+
+	variants.push(payload);
+
+	variants.push({
+		...payload,
+		location: {
+			...payload.location,
+			coordinates: [payload.lng, payload.lat],
+		},
+	});
+
+	variants.push({
+		...payload,
+		lat: undefined,
+		lng: undefined,
+		location: {
+			...payload.location,
+			coordinates: [payload.lng, payload.lat],
+		},
+	});
+
+	const uniqueVariants = [];
+	const seen = new Set();
+	variants.forEach((variant) => {
+		const key = JSON.stringify(variant);
+		if (seen.has(key)) return;
+		seen.add(key);
+		uniqueVariants.push(variant);
+	});
+
+	return uniqueVariants;
+}
+
 function closeAddPlantPanel() {
 	const addPlantPanel = document.querySelector(".addPlant-panel");
 	if (!addPlantPanel) return;
 
 	addPlantPanel.classList.remove("open");
 	addPlantPanel.setAttribute("aria-hidden", "true");
+}
+
+function bindAddPlantUploadAction() {
+	const uploadBtn = document.querySelector("#upload");
+	if (!uploadBtn) return;
+	if (uploadBtn.dataset.tradeBound === "1") return;
+
+	uploadBtn.dataset.tradeBound = "1";
+	uploadBtn.addEventListener("click", (event) => {
+		event.preventDefault();
+		createPlantFromPanel().catch((error) => {
+			console.error("createPlantFromPanel failed:", error);
+			alert("Kunde inte skapa trade.");
+		});
+	});
+}
+
+function getPlantFormInput() {
+	const nameInput = document.querySelector("#plantTypeInput");
+	const lightInput = document.querySelector("#LightLevelInput");
+	const imageInput = document.getElementById("imageUpload");
+
+	const plantName = String((nameInput && nameInput.value) || "").trim();
+	const lightLevel = Number(String((lightInput && lightInput.value) || "2").trim() || 2);
+	const imageFile = imageInput && imageInput.files ? imageInput.files[0] || null : null;
+
+	return { plantName, lightLevel, imageFile };
+}
+
+async function tryUploadPlantImage(imageFile) {
+	if (!imageFile) return DEFAULT_PLANT_IMAGE_URL;
+
+	try {
+		return await uploadImageToImgBB(imageFile);
+	} catch (error) {
+		console.error("Image upload failed:", error);
+		alert("Kunde inte ladda upp bilden. Traden skapas med standardbild.");
+		return DEFAULT_PLANT_IMAGE_URL;
+	}
+}
+
+async function resolvePlantAddress(selectedPosition) {
+	let address = String(window.currentAddress || "").trim() || "Stockholm";
+	if (address !== "Stockholm") return address;
+
+	try {
+		const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${selectedPosition.lat}&lon=${selectedPosition.lng}&format=json`);
+		const geoData = await geoRes.json();
+		if (geoData && geoData.display_name) {
+			address = String(geoData.display_name).slice(0, 160);
+		}
+	} catch (error) {
+		console.error("Address lookup failed:", error);
+	}
+
+	return address;
+}
+
+function buildNewPlantPayload(plantName, lightLevel, imageUrl, selectedPosition, address) {
+	return {
+		name: plantName,
+		species: plantName,
+		description: `Byter gärna mot annan växt i bra skick. Ljusnivå: ${lightLevelLabel(String(lightLevel))}.`,
+		imageUrl,
+		lightLevel,
+		status: "posted",
+		isAvailable: true,
+		lat: selectedPosition.lat,
+		lng: selectedPosition.lng,
+		location: {
+			address,
+			coordinates: {
+				lat: selectedPosition.lat,
+				lng: selectedPosition.lng,
+			},
+		},
+	};
+}
+
+async function postPlantPayloadVariants(payloadVariants, token) {
+	let finalResponse = null;
+
+	for (let index = 0; index < payloadVariants.length; index += 1) {
+		const currentPayload = payloadVariants[index];
+		// try each payload version until one is accepted
+		const response = await fetch(`${TRADE_API_BASE}/plants`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${token}`,
+			},
+			body: JSON.stringify(currentPayload),
+		});
+
+		if (response.ok) return response;
+
+		const errText = await readResponseText(response);
+		console.error(`POST /plants failed (variant ${index + 1}/${payloadVariants.length}):`, response.status, errText);
+
+		if (handleUnauthorizedResponse(response, "Din session är ogiltig. Logga in igen.")) {
+			return null;
+		}
+
+		finalResponse = response;
+	}
+
+	return finalResponse;
 }
 
 async function createPlantFromPanel() {
@@ -1133,67 +1383,18 @@ async function createPlantFromPanel() {
 		return;
 	}
 
-	const nameInput = document.querySelector("#plantTypeInput");
-	const lightInput = document.querySelector("#LightLevelInput");
-	const imageInput = document.getElementById("imageUpload");
-
-	let plantName = "";
-	if (nameInput) {
-		plantName = String(nameInput.value).trim();
-	}
-
-	let lightLevelValue = "";
-	if (lightInput) {
-		lightLevelValue = String(lightInput.value).trim();
-	}
-
-	const lightLevel = Number(lightLevelValue || 2);
-
-	let imageFile = null;
-	if (imageInput && imageInput.files && imageInput.files[0]) {
-		imageFile = imageInput.files[0];
-	}
+	const { plantName, lightLevel, imageFile } = getPlantFormInput();
 
 	if (!plantName) {
 		alert("Välj växttyp.");
 		return;
 	}
 
-	let imageBase64 = "";
-	if (imageFile) {
-		imageBase64 = await toOptimizedBase64(imageFile);
-		if (estimateDataUrlBytes(imageBase64) > MAX_IMAGE_DATAURL_BYTES) {
-			imageBase64 = "";
-			alert("Bilden var för stor och togs bort för att kunna skapa trade.");
-		}
-	}
-
 	const selectedPosition = getSelectedMarkerLatLng();
-	let currentAddress = "Stockholm";
+	const imageUrl = await tryUploadPlantImage(imageFile);
+	const currentAddress = await resolvePlantAddress(selectedPosition);
 
-	try {
-		const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${selectedPosition.lat}&lon=${selectedPosition.lng}&format=json`);
-		const geoData = await geoRes.json();
-		if (geoData && geoData.display_name) {
-			currentAddress = String(geoData.display_name).slice(0, 160);
-		}
-	} catch (error) {
-		console.error("Address lookup failed:", error);
-	}
-
-	let payload = {
-		name: plantName,
-		species: plantName,
-		description: `Byter gärna mot annan växt i bra skick. Ljusnivå: ${lightLevelLabel(String(lightLevel))}.`,
-		imageUrl: imageBase64,
-		lightLevel,
-		lat: selectedPosition.lat,
-		lng: selectedPosition.lng,
-		location: {
-			address: currentAddress,
-			coordinates: [selectedPosition.lng, selectedPosition.lat],
-		},
-	};
+	let payload = buildNewPlantPayload(plantName, lightLevel, imageUrl, selectedPosition, currentAddress);
 
 	// if too big use lighter payload data
 	if (estimateJsonBytes(payload) > MAX_PLANT_PAYLOAD_BYTES) {
@@ -1205,20 +1406,17 @@ async function createPlantFromPanel() {
 		return;
 	}
 
-	const response = await fetch(`${TRADE_API_BASE}/plants`, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${token}`,
-		},
-		body: JSON.stringify(payload),
-	});
+	const payloadVariants = buildPlantPayloadVariants(payload);
+	const finalResponse = await postPlantPayloadVariants(payloadVariants, token);
 
-	if (!response.ok) {
-		const errText = await readResponseText(response);
-		console.error("POST /plants failed:", response.status, errText);
+	if (!finalResponse) {
+		alert("Kunde inte skapa trade.");
+		return;
+	}
 
-		if (handleUnauthorizedResponse(response, "Din session är ogiltig. Logga in igen.")) {
+	if (!finalResponse.ok) {
+		if (finalResponse.status >= 500) {
+			alert("Backend svarade med serverfel. Traden sparades inte i databasen. Försök igen om en stund.");
 			return;
 		}
 
@@ -1228,14 +1426,9 @@ async function createPlantFromPanel() {
 
 	let createdPlant = null;
 	try {
-		createdPlant = await response.json();
+		createdPlant = await finalResponse.json();
 	} catch (error) {
 		createdPlant = null;
-	}
-
-	const createdPlantId = getIdFromValue(createdPlant);
-	if (createdPlantId) {
-		setPlantCoordOverride(createdPlantId, selectedPosition.lat, selectedPosition.lng);
 	}
 
 	closeAddPlantPanel();
@@ -1246,12 +1439,19 @@ async function createPlantFromPanel() {
 // refresh ui
 async function refreshTradeUi() {
 	const currentUser = await ensureCurrentUserId();
+	syncKnownUserNameFromCurrentUser();
+	filteredPlantIds = null;
 
+	// First fetch fresh data, then redraw the UI.
 	plantsCache = await fetchAllPlants();
 	const allTrades = await fetchAllTrades();
+	allTradesCache = allTrades;
+	updateKnownUserNamesFromTrades(allTrades);
+	plantsCache = plantsCache.map(normalizePlant);
 
 	if (currentUser && currentUser.id) {
-		userTradesCache = await fetchTradesForUser(currentUser.id);
+		userTradesCache = await fetchTradesForUser();
+		updateKnownUserNamesFromTrades(userTradesCache);
 	} else {
 		userTradesCache = [];
 	}
@@ -1264,11 +1464,29 @@ async function refreshTradeUi() {
 
 // init
 function initTradeModule() {
+	authSnapshot = getAuthSnapshot();
+	bindAddPlantUploadAction();
+
+	window.addEventListener("plantsFiltered", (event) => {
+		setFilteredPlantIdsFromPlants(event.detail);
+		renderPlantMarkers(allTradesCache);
+	});
+
 	window.addEventListener("auth-changed", () => {
 		refreshTradeUi().catch((error) => {
 			console.error("refreshTradeUi error:", error);
 		});
 	});
+
+	// Legacy scripts still update sessionStorage without emitting auth changed
+	setInterval(() => {
+		const nextSnapshot = getAuthSnapshot();
+		if (nextSnapshot === authSnapshot) return;
+		authSnapshot = nextSnapshot;
+		refreshTradeUi().catch((error) => {
+			console.error("refreshTradeUi error:", error);
+		});
+	}, 1200);
 
 	refreshTradeUi().catch((error) => {
 		console.error("Initial trade UI refresh failed:", error);

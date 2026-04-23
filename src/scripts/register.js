@@ -51,6 +51,9 @@ async function registerUser() {
         const result = await response.json();
 
         if (response.ok) {
+            // Pre-store name so it survives into the first login (login response has no name)
+            const existingUser = JSON.parse(localStorage.getItem("user") || "null");
+            localStorage.setItem("user", JSON.stringify({ ...(existingUser || {}), name, email }));
             registerModal.style.display = "none";
             loginModal.style.display = "flex";
         } else {

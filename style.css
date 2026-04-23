@@ -115,6 +115,11 @@ html, body {
   z-index: 2;
   background: #fff;
   overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.profile-panel.is-editing-profile {
+  overflow: hidden;
 }
 
 .requests-panel__header,
@@ -609,6 +614,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
 }
 
 .divIcon {

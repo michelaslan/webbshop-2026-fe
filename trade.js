@@ -467,29 +467,35 @@ async function fetchAllTrades() {
 	const token = getToken();
 	if (!token) return [];
 
-	const headers = token
-		? {
-				Authorization: `Bearer ${token}`,
-		  }
-		: {};
+	const headers = {
+		Authorization: `Bearer ${token}`,
+	};
 
-	const response = await fetch(`${TRADE_API_BASE}/trades`, { headers });
+	const currentUser = getCurrentUser();
+	const isAdmin = currentUser?.role === "admin";
 
-	if (response.ok) {
-		const trades = await response.json();
-		return Array.isArray(trades) ? trades : [];
-	}
+	try {
+		// ADMIN → alla trades
+		if (isAdmin) {
+			const res = await fetch(`${TRADE_API_BASE}/trades`, { headers });
 
-	if (handleUnauthorizedResponse(response, "Din session har gått ut. Logga in igen.")) {
+			if (!res.ok) return [];
+
+			const data = await res.json();
+			return Array.isArray(data) ? data : [];
+		}
+
+		// USER → egna trades
+		const res = await fetch(`${TRADE_API_BASE}/trades/mine`, { headers });
+
+		if (!res.ok) return [];
+
+		const data = await res.json();
+		return Array.isArray(data) ? data : [];
+	} catch (err) {
+		console.error("fetchAllTrades error:", err);
 		return [];
 	}
-
-	// normal users may be blocked from /trades using /trades/mine instead
-	const mineResponse = await fetch(`${TRADE_API_BASE}/trades/mine`, { headers });
-	if (!mineResponse.ok) return [];
-
-	const mineTrades = await mineResponse.json();
-	return Array.isArray(mineTrades) ? mineTrades : [];
 }
 
 function lightLevelLabel(value) {
@@ -849,7 +855,7 @@ async function deleteOwnPlant(plantId) {
 			return;
 		}
 
-		alert("Kunde inte ta bort trade.");
+		alert("Något gick fel, uppdaterar listan ändå.");
 		return;
 	}
 
@@ -1022,6 +1028,93 @@ function getTradeMessage(trade) {
 
 	return DEFAULT_REQUEST_MESSAGE;
 }
+function tradeHistoryCard(trade, currentUserId) {
+  const offeredName   = resolveTradePlantName(trade.offeredPlant);
+  const requestedName = resolveTradePlantName(trade.requestedPlant);
+  const statusLabel   = getTradeStatusLabel(trade.status);
+  const isRequester   = getIdFromValue(trade.requester) === currentUserId;
+  const roleLabel     = isRequester ? "Du skickade" : "Du tog emot";
+  const tradeId       = trade._id || trade.id; // Säkerställ att vi får ut ett ID
+
+  let statusClass = "trade-history-status--other";
+  if (trade.status === "accepted") statusClass = "trade-history-status--accepted";
+  if (trade.status === "rejected") statusClass = "trade-history-status--rejected";
+  if (isPendingStatus(trade.status)) statusClass = "trade-history-status--pending";
+
+  // Endast den som skickat förfrågan kan ta bort/ångra den
+  const deleteButton = isRequester
+    ? `<button class="panel-cancel" style="padding: 5px 10px; font-size: 11px; margin-top: 8px;" 
+               data-delete-trade="${tradeId}">
+          Ångra förfrågan
+       </button>`
+    : "";
+
+  return `
+    <article class="trade-history-card">
+      <div class="trade-history-card__plants">
+        <span>${safeText(offeredName)}</span>
+        <span class="trade-history-card__arrow">↔</span>
+        <span>${safeText(requestedName)}</span>
+      </div>
+      <div class="trade-history-card__meta">
+        <span class="trade-history-status ${statusClass}">${safeText(statusLabel)}</span>
+        <span class="trade-history-card__role">${safeText(roleLabel)}</span>
+      </div>
+      ${deleteButton}
+    </article>
+  `;
+}
+
+function renderTradeHistory() {
+  const container = document.getElementById("trade-history");
+  const section = document.getElementById("trade-history-section");
+  if (!container || !section) return;
+
+  const currentUserId = getCurrentUserId();
+  if (!currentUserId) {
+    section.style.display = "none";
+    return;
+  }
+
+  const myTrades = userTradesCache.filter((trade) => {
+    const isRequester = getIdFromValue(trade.requester) === currentUserId;
+    const isReceiver = getIdFromValue(trade.receiver) === currentUserId;
+    return isRequester || isReceiver;
+  });
+
+  if (myTrades.length === 0) {
+    section.style.display = "none";
+    return;
+  }
+
+  section.style.display = "block";
+
+  const ongoing = myTrades.filter((t) => isPendingStatus(t.status));
+  const finished = myTrades.filter((t) => !isPendingStatus(t.status));
+
+  container.innerHTML = `
+    <div class="trade-history__group">
+      <p class="trade-history__group-title">
+        Pågående <span class="trade-history__count">${ongoing.length}</span>
+      </p>
+      ${ongoing.length ? ongoing.map((t) => tradeHistoryCard(t, currentUserId)).join("") : `<p class="trade-history__empty">Inga pågående byten.</p>`}
+    </div>
+
+    <div class="trade-history__group">
+      <p class="trade-history__group-title">
+        Avslutade <span class="trade-history__count">${finished.length}</span>
+      </p>
+      ${finished.length ? finished.map((t) => tradeHistoryCard(t, currentUserId)).join("") : `<p class="trade-history__empty">Inga avslutade byten.</p>`}
+    </div>
+  `;
+
+  container.querySelectorAll("[data-delete-trade]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tradeId = btn.getAttribute("data-delete-trade");
+      deleteTrade(tradeId);
+    });
+  });
+}
 
 async function rejectTrade(trade) {
 	const token = getToken();
@@ -1099,7 +1192,34 @@ async function acceptTrade(trade) {
 	console.error("Accept trade failed:", updateResponse.status, errText);
 	alert("Kunde inte godkänna förfrågan.");
 }
+async function deleteTrade(tradeId) {
+	const token = getToken();
+	if (!token) {
+		alert("Du måste vara inloggad.");
+		return;
+	}
 
+	const response = await fetch(`${TRADE_API_BASE}/trades/${tradeId}`, {
+		method: "DELETE",
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+
+	if (!response.ok) {
+		const errText = await readResponseText(response);
+		console.error("DELETE trade failed:", response.status, errText);
+
+		if (handleUnauthorizedResponse(response, "Din session har gått ut. Logga in igen.")) {
+			return;
+		}
+
+		alert("Kunde inte ta bort trade.");
+		return;
+	}
+
+	await refreshTradeUi();
+}
 function renderRequestsPanel() {
 	const requestsPanel = document.querySelector(".requests-panel");
 	if (!requestsPanel) return;
@@ -1264,6 +1384,10 @@ function buildPlantPayloadVariants(payload) {
 function closeAddPlantPanel() {
 	const addPlantPanel = document.querySelector(".addPlant-panel");
 	if (!addPlantPanel) return;
+
+	if (document.activeElement) {
+        document.activeElement.blur();
+    }
 
 	addPlantPanel.classList.remove("open");
 	addPlantPanel.setAttribute("aria-hidden", "true");
@@ -1460,6 +1584,7 @@ async function refreshTradeUi() {
 	renderPlantMarkers(allTrades);
 	renderMyPosts();
 	renderRequestsPanel();
+	renderTradeHistory();
 }
 
 // init

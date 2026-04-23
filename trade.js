@@ -185,16 +185,7 @@ async function ensureCurrentUserId() {
 	}
 }
 // utilities
-function safeText(value) {
-	const safeValue = value === null || value === undefined ? "" : value;
 
-	return String(safeValue)
-		.replaceAll("&", "&amp;")
-		.replaceAll("<", "&lt;")
-		.replaceAll(">", "&gt;")
-		.replaceAll('"', "&quot;")
-		.replaceAll("'", "&#39;");
-}
 
 async function readResponseText(response) {
 	try {
@@ -303,8 +294,6 @@ function isPlantClosedForRequests(plant) {
 
 	const statusValue = String(plant.status || "").trim().toLowerCase();
 	const statusMeansClosed =
-		statusValue === "accepted" ||
-		statusValue === "godkand" ||
 		statusValue === "godkänd" ||
 		statusValue === "traded" ||
 		statusValue === "closed" ||
@@ -592,7 +581,7 @@ function buildOfferSelectOptions(currentUser) {
 
 	return [
 		`<option value="">Välj en av dina trades</option>`,
-		...myPlants.map((plant) => `<option value="${safeText(plant.id)}">${safeText(plant.name)} (${safeText(lightLevelLabel(plant.lightLevel))})</option>`),
+		...myPlants.map((plant) => `<option value="${plant.id}">${plant.name} (${lightLevelLabel(plant.lightLevel)})</option>`),
 	].join("");
 }
 
@@ -620,12 +609,12 @@ function buildTradeRequestSection(plant, currentUser, isOwner, status) {
 		<div class="trade-popup__counter">
 		  <p class="trade-popup__section-title">Skicka bytesförfrågan</p>
 		  <div class="trade-popup__counter-grid">
-			<select data-offered-plant="${safeText(plant.id)}" class="trade-counter-field">
+			<select data-offered-plant="${plant.id}" class="trade-counter-field">
 			  ${offerOptions}
 			</select>
-			<input data-counter-message="${safeText(plant.id)}" class="trade-counter-field" type="text" placeholder="Hej! Jag är intresserad av din växt." />
+			<input data-counter-message="${plant.id}" class="trade-counter-field" type="text" placeholder="Hej! Jag är intresserad av din växt." />
 		  </div>
-		  <button data-send-request="${safeText(plant.id)}" class="trade-request-btn" ${isDisabled ? "disabled" : ""}>
+		  <button data-send-request="${plant.id}" class="trade-request-btn" ${isDisabled ? "disabled" : ""}>
 			${buttonText}
 		  </button>
 		</div>`;
@@ -633,25 +622,25 @@ function buildTradeRequestSection(plant, currentUser, isOwner, status) {
 
 function buildPlantPopup(plant, currentUser, status) {
 	const isOwner = currentUser && plant.owner === currentUser.id;
-	const statusClass = `trade-status--${safeText(status)}`;
+	const statusClass = `trade-status--${status}`;
 	const requestSection = buildTradeRequestSection(plant, currentUser, isOwner, status);
 
 	return `
-	  <article class="trade-popup" data-plant-card="${safeText(plant.id)}">
-		<h3 class="trade-popup__title">${safeText(plant.name)}</h3>
-		<p class="trade-popup__owner">Delad av ${safeText(plant.ownerName)}</p>
-		${plant.imageUrl ? `<img src="${safeText(plant.imageUrl)}" alt="${safeText(plant.name)}" class="trade-popup__image" />` : ""}
+	  <article class="trade-popup" data-plant-card="${plant.id}">
+		<h3 class="trade-popup__title">${plant.name}</h3>
+		<p class="trade-popup__owner">Delad av ${plant.ownerName}</p>
+		${plant.imageUrl ? `<img src="${plant.imageUrl}" alt="${plant.name}" class="trade-popup__image" />` : ""}
 
 		<div class="trade-popup__meta">
 		  <p><strong>Plats</strong></p>
-		  <p>${safeText(plant.lat.toFixed(4))}, ${safeText(plant.lng.toFixed(4))}</p>
-		  <p class="trade-popup__address">${safeText(plant.address)}</p>
+		  <p>${plant.lat.toFixed(4)}, ${plant.lng.toFixed(4)}</p>
+		  <p class="trade-popup__address">${plant.address}</p>
 		</div>
 
 		<div class="trade-popup__meta">
-		  <p><strong>Status</strong> <span class="trade-status ${statusClass}">${safeText(getTradeStatusLabel(status))}</span></p>
+		  <p><strong>Status</strong> <span class="trade-status ${statusClass}">${getTradeStatusLabel(status)}</span></p>
 		  <p><strong>Beskrivning</strong></p>
-		  <p>${safeText(plant.description)}</p>
+		  <p>${plant.description}</p>
 		</div>
 
 		${requestSection}
@@ -919,10 +908,10 @@ function renderMyPosts() {
 		item.className = "profile-post-item";
 		item.innerHTML = `
 			<div class="postDiv-profile">
-				${plant.imageUrl ? `<img src="${safeText(plant.imageUrl)}" alt="${safeText(plant.name)}"/>` : ""}
+				${plant.imageUrl ? `<img src="${plant.imageUrl}" alt="${plant.name}"/>` : ""}
 				<div>
-					<p>${safeText(plant.name)}</p>
-					<small>${safeText(lightLevelLabel(plant.lightLevel))}</small>
+					<p>${plant.name}</p>
+					<small>${lightLevelLabel(plant.lightLevel)}</small>
 				</div>
 			</div>
 			<div class="profile-post-actions">
@@ -1147,9 +1136,9 @@ function renderRequestsPanel() {
 					<p class="request-card__status-label">Väntande</p>
 					<article class="request-card" data-trade-id="${safeText(trade._id)}">
 						<div class="request-card__top">
-							<p class="request-card__name">${safeText(requesterName)}</p>
-							<p class="request-card__intent">vill byta ${safeText(offeredName)} mot ${safeText(requestedName)}</p>
-							<p class="request-card__message">${safeText(tradeMessage)}</p>
+							<p class="request-card__name">${requesterName}</p>
+							<p class="request-card__intent">vill byta ${offeredName} mot ${requestedName}</p>
+							<p class="request-card__message">${tradeMessage}</p>
 						</div>
 					<div class="request-card__actions">
 						<button class="request-reject" data-reject-trade="${safeText(trade._id)}">Neka</button>

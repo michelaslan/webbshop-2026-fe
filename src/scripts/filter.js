@@ -6,7 +6,7 @@ const clearFilter = document.getElementById("clearFilter");
 const FILTER_API_BASE = "https://webbshop-2026-be-g08.vercel.app";
 
 function getAuthHeaders() {
-  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+  const token = localStorage.getItem("token");
   if (!token) return {};
   return { Authorization: `Bearer ${token}` };
 }

@@ -23,6 +23,27 @@ var inputCurrentPassword = document.getElementById('current-password');
 var inputNewPassword = document.getElementById('new-password');
 var inputConfirmPassword = document.getElementById('confirm-password');
 
+function getAuthToken() {
+    return localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+}
+
+function getStoredUser() {
+    try {
+        var localUser = JSON.parse(localStorage.getItem('user') || 'null');
+        if (localUser) return localUser;
+
+        var sessionUser = JSON.parse(sessionStorage.getItem('user') || 'null');
+        if (sessionUser) {
+            localStorage.setItem('user', JSON.stringify(sessionUser));
+            return sessionUser;
+        }
+
+        return null;
+    } catch (error) {
+        return null;
+    }
+}
+
 async function verifyCurrentPassword(email, password) {
     var normalizedEmail = (email || '').trim().toLowerCase();
     if (!normalizedEmail || !password) return false;
@@ -40,7 +61,7 @@ async function verifyCurrentPassword(email, password) {
 }
 
 async function updateProfileInDatabase(params) {
-    var token = localStorage.getItem('token') || '';
+    var token = getAuthToken();
     if (!token) {
         return { ok: false, message: 'Du måste vara inloggad för att uppdatera profilen.' };
     }
@@ -105,10 +126,22 @@ function closeProfilePanel() {
 
     profilePanel.classList.remove('open');
     profilePanel.setAttribute('aria-hidden', 'true');
+    profilePanel.classList.remove('is-editing-profile');
 
     if (editPanel) {
         editPanel.classList.remove('open');
         editPanel.setAttribute('aria-hidden', 'true');
+    }
+}
+
+function setEditPanelOpen(isOpen) {
+    if (!editPanel) return;
+
+    editPanel.classList.toggle('open', isOpen);
+    editPanel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+
+    if (profilePanel) {
+        profilePanel.classList.toggle('is-editing-profile', isOpen);
     }
 }
 
@@ -122,7 +155,7 @@ function openLoginModal() {
 function updateAuthButton() {
     if (!logoutButton) return;
 
-    var token = localStorage.getItem('token');
+    var token = getAuthToken();
     var isLoggedIn = Boolean(token);
 
     logoutButton.textContent = isLoggedIn ? 'Logga ut' : 'Logga in';
@@ -144,15 +177,22 @@ function logoutUser() {
     openLoginModal();
 }
 
-const storedUser = localStorage.getItem("user");
+const storedUser = getStoredUser();
 if (storedUser) {
-    const user = JSON.parse(storedUser);
-    if (profileName && user.name) profileName.textContent = user.name;
-    if (profileEmail && user.email) profileEmail.textContent = user.email;
+    if (profileName && storedUser.name) profileName.textContent = storedUser.name;
+    if (profileEmail && storedUser.email) profileEmail.textContent = storedUser.email;
+}
+
+function refreshProfileDisplay() {
+    updateAuthButton();
+    var currentUser = getStoredUser();
+    if (profileName) profileName.textContent = (currentUser && currentUser.name) ? currentUser.name : 'Du';
+    if (profileEmail) profileEmail.textContent = (currentUser && currentUser.email) ? currentUser.email : 'du@exempel.se';
 }
 
 updateAuthButton();
-window.addEventListener('auth-changed', updateAuthButton);
+window.addEventListener('auth-changed', refreshProfileDisplay);
+refreshProfileDisplay();
 
 
 // Öppnar panelen
@@ -210,27 +250,23 @@ if (editButton) {
     editButton.addEventListener('click', function () {
         if (!editPanel) return;
 
-        if (profileName && inputName) inputName.value = profileName.textContent.trim();
-        if (profileEmail && inputEmail) inputEmail.value = profileEmail.textContent.trim();
+        var storedEditUser = getStoredUser();
+        if (inputName) inputName.value = (storedEditUser && storedEditUser.name) ? storedEditUser.name : (profileName ? profileName.textContent.trim() : '');
+        if (inputEmail) inputEmail.value = (storedEditUser && storedEditUser.email) ? storedEditUser.email : (profileEmail ? profileEmail.textContent.trim() : '');
         if (inputCurrentPassword) inputCurrentPassword.value = '';
         if (inputNewPassword) inputNewPassword.value = '';
         if (inputConfirmPassword) inputConfirmPassword.value = '';
 
-        editPanel.classList.add('open');
-        editPanel.setAttribute('aria-hidden', 'false');
+        setEditPanelOpen(true);
     });
 }
 
 if (editClose) editClose.addEventListener('click', function () {
-    if (!editPanel) return;
-    editPanel.classList.remove('open');
-    editPanel.setAttribute('aria-hidden', 'true');
+    setEditPanelOpen(false);
 });
 
 if (editCancel) editCancel.addEventListener('click', function () {
-    if (!editPanel) return;
-    editPanel.classList.remove('open');
-    editPanel.setAttribute('aria-hidden', 'true');
+    setEditPanelOpen(false);
 });
 
 // Sparar ändringar i profilen
@@ -312,15 +348,13 @@ if (editSave) editSave.addEventListener('click', async function () {
     };
     localStorage.setItem('user', JSON.stringify(updatedUser));
     localStorage.removeItem('passwordOverrides');
+    window.dispatchEvent(new Event('auth-changed'));
 
     if (inputCurrentPassword) inputCurrentPassword.value = '';
     if (inputNewPassword) inputNewPassword.value = '';
     if (inputConfirmPassword) inputConfirmPassword.value = '';
 
-    if (editPanel) {
-        editPanel.classList.remove('open');
-        editPanel.setAttribute('aria-hidden', 'true');
-    }
+    setEditPanelOpen(false);
 });
 
 if (window.marker && profileCoordinates) {

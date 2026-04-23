@@ -3,18 +3,29 @@ const filterPanel = document.querySelector(".filter-panel");
 const filterClose = document.querySelector(".filter-panel-close");
 const applyFilter = document.getElementById("applyFilter");
 const clearFilter = document.getElementById("clearFilter");
+const FILTER_API_BASE = "https://webbshop-2026-be-g08.vercel.app";
+
+function getAuthHeaders() {
+  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
 
 // Open/close filter panel
-filterBtn.addEventListener("click", () => {
-  filterPanel.classList.toggle("open");
-});
+if (filterBtn && filterPanel) {
+  filterBtn.addEventListener("click", () => {
+    filterPanel.classList.toggle("open");
+  });
+}
 
-filterClose.addEventListener("click", () => {
-  filterPanel.classList.remove("open");
-});
+if (filterClose && filterPanel) {
+  filterClose.addEventListener("click", () => {
+    filterPanel.classList.remove("open");
+  });
+}
 
 // Apply filter — fetches plants from backend with filters and triggers map update
-applyFilter.addEventListener("click", async () => {
+if (applyFilter && filterPanel) applyFilter.addEventListener("click", async () => {
   const checkedNames = document.querySelectorAll(".filter-checkbox-item input[data-type='name']:checked");
   const checkedLevels = document.querySelectorAll(".filter-checkbox-item input[data-type='light']:checked");
   
@@ -25,11 +36,9 @@ applyFilter.addEventListener("click", async () => {
   selectedNames.forEach(name => params.append("name", name));
   selectedLevels.forEach(level => params.append("lightLevel", level));
 
-  const token = localStorage.getItem('token');
-  const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-
   try {
-    const res = await fetch(`/plants?${params.toString()}`, { headers });
+    const headers = getAuthHeaders();
+    const res = await fetch(`${FILTER_API_BASE}/plants?${params.toString()}`, { headers });
     const plants = await res.json();
     window.dispatchEvent(new CustomEvent("plantsFiltered", { detail: plants }));
   } catch (error) {
@@ -40,14 +49,12 @@ applyFilter.addEventListener("click", async () => {
 });
 
 // Clear filter — fetches all plants and resets the dropdowns
-clearFilter.addEventListener("click", async () => {
+if (clearFilter && filterPanel) clearFilter.addEventListener("click", async () => {
   document.querySelectorAll(".filter-checkbox-item input").forEach(cb => cb.checked = false);
 
-  const token = localStorage.getItem('token');
-  const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-
   try {
-    const res = await fetch("/plants", { headers });
+    const headers = getAuthHeaders();
+    const res = await fetch(`${FILTER_API_BASE}/plants`, { headers });
     const plants = await res.json();
     window.dispatchEvent(new CustomEvent("plantsFiltered", { detail: plants }));
   } catch (error) {

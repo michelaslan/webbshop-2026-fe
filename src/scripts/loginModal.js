@@ -1,11 +1,74 @@
 window.addEventListener("load", () => {
-  const token = sessionStorage.getItem("token");
+  initializeAuthUi();
+});
+
+async function initializeAuthUi() {
+  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
   if (!token) {
     document.getElementById("login-modal").style.display = "flex";
-  } else {
-    setTimeout(() => loadMyPlants(), 500);
+    return;
   }
-});
+
+  await syncCurrentUserFromDatabase(token);
+  window.dispatchEvent(new Event("auth-changed"));
+}
+
+function applyUserToProfileUi(user) {
+  const profileName = document.getElementById("profile-name");
+  const profileEmail = document.getElementById("profile-email");
+  if (profileName && user && user.name) profileName.textContent = user.name;
+  if (profileEmail && user && user.email) profileEmail.textContent = user.email;
+}
+
+function storeUser(user) {
+  localStorage.setItem("user", JSON.stringify(user));
+  sessionStorage.setItem("user", JSON.stringify(user));
+}
+
+function normalizeUserResponse(payload, fallback) {
+  const base = fallback || {};
+  const user = payload && payload.user ? payload.user : payload;
+  if (!user || typeof user !== "object") {
+    return { ...base };
+  }
+
+  return {
+    ...base,
+    ...user,
+    name: user.name || base.name || "Du",
+    email: user.email || base.email || "",
+  };
+}
+
+async function syncCurrentUserFromDatabase(token) {
+  const existingUser = JSON.parse(localStorage.getItem("user") || "null");
+
+  try {
+    const meResponse = await fetch("https://webbshop-2026-be-g08.vercel.app/auth/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!meResponse.ok) {
+      if (existingUser) {
+        applyUserToProfileUi(existingUser);
+      }
+      return existingUser;
+    }
+
+    const meData = await meResponse.json();
+    const user = normalizeUserResponse(meData, existingUser || undefined);
+    storeUser(user);
+    applyUserToProfileUi(user);
+    return user;
+  } catch (error) {
+    if (existingUser) {
+      applyUserToProfileUi(existingUser);
+    }
+    return existingUser;
+  }
+}
 
 document.getElementById("login-email").addEventListener("input", clearLoginError);
 document.getElementById("login-password").addEventListener("input", clearLoginError);
@@ -41,17 +104,18 @@ document.getElementById("login-submit").addEventListener("click", async () => {
     const data = await res.json();
 
     if (res.ok) {
+      localStorage.setItem("token", data.token);
       sessionStorage.setItem("token", data.token);
-      const user = data.user || { email };
-      sessionStorage.setItem("user", JSON.stringify(user));
+      const existingUser = JSON.parse(localStorage.getItem("user") || "null");
+      const fallbackUser = normalizeUserResponse(data.user || { email }, existingUser || undefined);
+      storeUser(fallbackUser);
+      applyUserToProfileUi(fallbackUser);
 
-      const profileName = document.getElementById("profile-name");
-      const profileEmail = document.getElementById("profile-email");
-      if (profileName && user.name) profileName.textContent = user.name;
-      if (profileEmail && user.email) profileEmail.textContent = user.email;
+      // Fetch the canonical profile after login so name/email reflect current database values.
+      await syncCurrentUserFromDatabase(data.token);
 
       document.getElementById("login-modal").style.display = "none";
-      setTimeout(() => loadMyPlants(), 500);
+      window.dispatchEvent(new Event("auth-changed"));
     } else {
       showLoginError(data.error || "Fel e-post eller lösenord.");
     }

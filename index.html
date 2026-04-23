@@ -181,6 +181,9 @@
         <button id="logoutBtn" class="profile-logout-button" type="button">
           Logga ut
         </button>
+        <button id="openAdmin" class="profile-action-button hidden">
+  Admin panel
+</button>
       </div>
 
       <div class="profile-edit-panel" aria-hidden="true">
@@ -241,6 +244,7 @@
 
       <p class="panel-subtitle">My Posts</p>
       <ul id="myPosts"></ul>
+      
     </aside>
 
     <div id="map"></div>
@@ -462,6 +466,27 @@
       >
         &#10003; Växt tillagd!
       </p>
+    </aside>
+    <aside id="admin-panel" class="admin-panel hidden">
+      <div class="admin-panel__header">
+        <h2>Admin Dashboard</h2>
+        <button id="closeAdminPanel">×</button>
+      </div>
+
+      <section>
+        <h3>Användare</h3>
+        <ul id="admin-users-list"></ul>
+      </section>
+
+      <section>
+        <h3>Växter</h3>
+        <ul id="admin-plants-list"></ul>
+      </section>
+
+      <section>
+        <h3>Trades</h3>
+        <div id="admin-trades-list"></div>
+      </section>
     </aside>
 
     <script src="src/scripts/filter.js" defer></script>

@@ -1,13 +1,16 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@400;500;600;700&display=swap");
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   min-height: 100%;
   font-family: "DM Sans", "Outfit", system-ui, sans-serif;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -387,7 +390,7 @@ html, body {
   background: white;
   z-index: 1050;
   padding: 24px;
-  box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
   border-radius: 12px 12px 0 0;
 }
 
@@ -467,7 +470,7 @@ html, body {
   background: white;
   z-index: 1050;
   padding: 24px;
-  box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
   border-radius: 12px 12px 0 0;
 }
 
@@ -623,7 +626,7 @@ html, body {
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid white;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 .trade-map-icon-wrapper {
@@ -943,7 +946,7 @@ html, body {
   color: #2e6b44;
   font-weight: 600;
   text-decoration: none;
-  cursor:pointer;
+  cursor: pointer;
 }
 
 .hidden {
@@ -1002,10 +1005,9 @@ html, body {
 }
 
 /* ── register modal ── */
-#register-modal{
-  display:none;
+#register-modal {
+  display: none;
 }
-
 
 /* ===== RESPONSIVE FIXES ===== */
 
@@ -1066,7 +1068,7 @@ html, body {
   border-radius: 12px;
   padding: 12px 16px;
   margin-bottom: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: transform 0.2s ease;
 }
 .trade-history-card:hover {
@@ -1101,9 +1103,18 @@ html, body {
   text-transform: uppercase;
 }
 
-.trade-history-status--pending  { background: #fef9c3; color: #854d0e; }
-.trade-history-status--accepted { background: #dcfce7; color: #166534; }
-.trade-history-status--rejected { background: #fee2e2; color: #991b1b; }
+.trade-history-status--pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.trade-history-status--accepted {
+  background: #dcfce7;
+  color: #166534;
+}
+.trade-history-status--rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
 
 /* Ångra-knappen */
 .panel-cancel {
@@ -1123,9 +1134,204 @@ html, body {
   background: #f9fafb;
   border-color: #9ca3af;
 }
+/* ── Admin Panel Dashboard ── */
+
+.admin-panel {
+  position: fixed;
+  inset: 0;
+  background: #f4f7f6; /* En mjukare gråblå bakgrund */
+  z-index: 3000;
+  overflow-y: auto;
+  padding: 20px;
+  font-family: "DM Sans", sans-serif;
+  display: none; /* Döljs som standard */
+}
+
+/* Visas när klassen .open läggs till via JS */
+.admin-panel.open {
+  display: block;
+}
+
+/* Header-sektionen */
+.admin-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1000px;
+  margin: 0 auto 30px auto;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.admin-panel__header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+#closeAdminPanel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-size: 2rem;
+  line-height: 1;
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease;
+  color: #4a5568;
+}
+
+#closeAdminPanel:hover {
+  background: #fff5f5;
+  color: #e53e3e;
+  border-color: #feb2b2;
+  transform: rotate(90deg);
+}
+
+/* Sektioner och Listor */
+.admin-panel section {
+  max-width: 1000px;
+  margin: 0 auto 40px auto;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.admin-panel h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-panel h3::before {
+  content: "";
+  width: 4px;
+  height: 20px;
+  background: #72d372; /* Din gröna färg */
+  border-radius: 10px;
+}
+
+/* List-styling för både Användare, Växter och Trades */
+#admin-users-list,
+#admin-plants-list,
+#admin-trades-list
+ {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+/* Styling för varje rad (item) */
+.admin-user-item,
+.profile-post-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: #f8fafc;
+  border: 1px solid #edf2f7;
+  border-radius: 12px;
+  transition: transform 0.1s ease;
+}
+
+.admin-user-item:hover,
+.profile-post-item:hover {
+  background: #ffffff;
+  border-color: #72d372;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Knappar i listorna */
+.admin-panel button:not(#closeAdminPanel) {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+button[data-promote] {
+  background: #48bb78;
+  color: white;
+}
+
+.profile-post-edit {
+  background: #4299e1;
+  color: white;
+  margin-right: 5px;
+}
+
+.profile-post-delete {
+  background: #f56565;
+  color: white;
+}
+
+.admin-panel button:hover {
+  opacity: 0.85;
+}
+
+.admin-trade-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+.admin-trade-table th, .admin-trade-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+.admin-trade-table th {
+    background-color: #f8f9fa;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #666;
+}
+
+/* Status-badges för Admin Trades */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-badge.accepted { background: #dcfce7; color: #166534; }
+.status-badge.pending { background: #fef9c3; color: #854d0e; }
+.status-badge.rejected { background: #fee2e2; color: #991b1b; }
+
+/* Gör tabellen scrollbar på mobilen */
+#trade-history {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.admin-user-group-title {
+    grid-column: 1 / -1;
+    margin-top: 15px;
+    background: #edf2f7;
+    padding: 8px 15px;
+    border-radius: 8px;
+    color: #4a5568;
+}
+#trade-history table {
+    min-width: 600px; /* Tvingar fram horisontell scroll på mobil så tabellen inte trycks ihop */
+}
+
 /* ===== MOBIL ===== */
 @media (max-width: 768px) {
-
   /* Paneler full width */
   .requests-panel,
   .profile-panel,
@@ -1156,6 +1362,35 @@ html, body {
     right: 60px;
     padding: 0 10px;
   }
+}
+.admin-panel {
+  padding: 10px;
+}
+
+.admin-panel section {
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    /* Gör list-items vertikala på små skärmar */
+    .admin-user-item,
+    .profile-post-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .profile-post-actions {
+        justify-content: flex-start;
+        margin-top: 5px;
+    }
+
+.admin-panel__header {
+        margin-bottom: 15px;
+    }
+
+.admin-panel__header h2 {
+  font-size: 1.4rem;
 }
 
 /* ===== EXTRA SMALL ===== */

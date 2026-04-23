@@ -112,6 +112,7 @@ document.getElementById("login-submit").addEventListener("click", async () => {
 
       // Fetch the canonical profile after login so name/email reflect current database values.
       await syncCurrentUserFromDatabase(data.token);
+setupAdminUi();
 
       document.getElementById("login-modal").style.display = "none";
       window.dispatchEvent(new Event("auth-changed"));
@@ -122,3 +123,17 @@ document.getElementById("login-submit").addEventListener("click", async () => {
     showLoginError("Kunde inte ansluta, försök igen.");
   }
 });
+function setupAdminUi() {
+  const adminBtn = document.getElementById("openAdmin");
+  if (!adminBtn) return;
+
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+
+  adminBtn.classList.toggle("hidden", user?.role !== "admin");
+
+  adminBtn.onclick = () => {
+    document.getElementById("admin-panel").classList.add("open");
+  };
+}
+
+window.addEventListener("auth-changed", setupAdminUi);

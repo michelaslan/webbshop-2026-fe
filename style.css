@@ -1043,7 +1043,86 @@ html, body {
   bottom: 80px;
   left: 16px;
 }
+/* ── Trade history ── */
+.trade-history__group {
+  margin-top: 16px;
+}
 
+.trade-history__group-title {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trade-history-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease;
+}
+.trade-history-card:hover {
+  transform: translateY(-2px);
+}
+.trade-history-card__plants {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.trade-history-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.trade-history-card__role {
+  color: #6b7280;
+}
+
+/* Status-piller */
+.trade-history-status {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.trade-history-status--pending  { background: #fef9c3; color: #854d0e; }
+.trade-history-status--accepted { background: #dcfce7; color: #166534; }
+.trade-history-status--rejected { background: #fee2e2; color: #991b1b; }
+
+/* Ångra-knappen */
+.panel-cancel {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  color: #4b5563;
+  border-radius: 6px;
+  padding: 6px;
+  margin-top: 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.panel-cancel:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
 /* ===== MOBIL ===== */
 @media (max-width: 768px) {
 

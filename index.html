@@ -1,51 +1,494 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hakim Livs</title>
+    <title>Plot Twist</title>
     <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="script.js" defer></script>
+    <script src="profilepage.js" defer></script>
+    <script src="addPlant.js" defer></script>
+    <script src="trade.js" defer></script>
+    <script src="src/scripts/admin.js" defer></script>
+    <script src="src/scripts/loginModal.js" defer></script>
+    <script src="src/scripts/register.js" defer></script>
   </head>
   <body>
+    <div id="login-modal" class="modal-overlay">
+      <div class="modal-box">
+        <h2 class="modal-title">Logga in</h2>
+        <p class="modal-subtitle">Välkommen till Plot Twist</p>
+        <div class="form-group">
+          <label for="login-email">E-post</label>
+          <input
+            class="panel-input"
+            type="email"
+            id="login-email"
+            placeholder="du@exempel.se"
+          />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Lösenord</label>
+          <input
+            class="panel-input"
+            type="password"
+            id="login-password"
+            placeholder="••••••••"
+          />
+        </div>
+        <p class="form-warning hidden" id="login-error"></p>
+        <button
+          id="login-submit"
+          class="panel-save"
+          style="width: 100%; margin-top: 8px"
+        >
+          Logga in
+        </button>
+        <p class="modal-footer-text">Inget konto? <a>Registrera dig</a></p>
+      </div>
+    </div>
 
-    <!-- HEADER -->
-    <header class="site-header">
-      <nav>
-        <a href="index.html" class="logo">Hakim Livs</a>
-        <ul class="nav-links">
-          <li><a href="products.html">Products</a></li>
-          <li><a href="cart.html">Cart (0)</a></li>
-          <li><a href="register.html">Register</a></li>
-          <li><a href="admin.html">Admin</a></li>
-        </ul>
-      </nav>
-    </header>
+    <div id="register-modal" class="modal-overlay">
+      <div class="modal-box">
+        <h2 class="modal-title">Registrera</h2>
+        <p class="modal-subtitle">Skapa ett konto</p>
+        <div class="form-group">
+          <label for="register-name">Namn</label>
+          <input
+            class="panel-input"
+            type="text"
+            id="register-name"
+            placeholder="Anna Karlsson"
+          />
+        </div>
+        <div class="form-group">
+          <label for="register-email">E-post</label>
+          <input
+            class="panel-input"
+            type="email"
+            id="register-email"
+            placeholder="du@exempel.se"
+          />
+        </div>
+        <div class="form-group">
+          <label for="register-password">Lösenord</label>
+          <input
+            class="panel-input"
+            type="password"
+            id="register-password"
+            placeholder="••••••••"
+          />
+        </div>
+        <p class="form-warning hidden" id="register-error"></p>
+        <button
+          id="register-submit"
+          class="panel-save"
+          style="width: 100%; margin-top: 8px"
+        >
+          Registrera
+        </button>
+        <button
+          id="close-register"
+          class="panel-cancel"
+          style="width: 100%; margin-top: 8px"
+        >
+          Avbryt
+        </button>
+      </div>
+    </div>
 
-    <!-- HERO (full width) -->
-    <section class="hero">
-      <h1>Welcome to Hakim Livs</h1>
-      <p>Fresh groceries delivered to your door</p>
-    </section>
+    <button
+      id="requestsBtn"
+      class="requests-button"
+      type="button"
+      aria-label="Öppna förfrågningar"
+    >
+      <span>Förfrågningar</span>
+    </button>
 
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-      <h1>Featured products</h1>
-      <div id="products"></div>
-    </main>
+    <button class="profile-button" aria-label="Open profile">
+      <img src="public/user_icon.png" alt="User icon" />
+    </button>
 
-    <!-- FOOTER -->
-    <footer class="site-footer">
-      <div class="footer-content">
-        <p>&copy; 2024 Hakim Livs. All rights reserved.</p>
-        <div class="footer-links">
-          <a href="/about">About</a>
-          <a href="/contact">Contact</a>
-          <a href="/terms">Terms</a>
+    <aside class="requests-panel" aria-hidden="true">
+      <div class="requests-panel__header">
+        <div>
+          <p class="panel-title">Bytesförfrågningar</p>
+          <p class="panel-subtitle">Inga nya förfrågningar</p>
+        </div>
+        <button
+          class="requests-close"
+          type="button"
+          aria-label="Stäng förfrågningar"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="requests-panel__empty-state">
+        <p class="requests-panel__empty-title">Inga förfrågningar än</p>
+        <p class="requests-panel__empty-text">
+          När någon vill byta med dig visas det här
+        </p>
+      </div>
+      <div
+        class="trade-history-section"
+        id="trade-history-section"
+        style="display: none"
+      >
+        <p class="panel-subtitle" style="margin-top: 20px">Byteshistorik</p>
+        <div id="trade-history"></div>
+      </div>
+    </aside>
+
+    <aside class="profile-panel" aria-hidden="true">
+      <div class="profile-panel__header">
+        <div>
+          <p class="panel-title">Min profil</p>
+          <p class="panel-subtitle">Hantera din profil och information</p>
+        </div>
+        <button class="panel-close" aria-label="Stäng profil">×</button>
+      </div>
+
+      <div class="profile-panel__body">
+        <div class="profile-card">
+          <div class="profile-avatar">
+            <img src="public/user_icon.png" alt="Profilikon" />
+          </div>
+          <div>
+            <p class="profile-name" id="profile-name">Du</p>
+            <p class="profile-email" id="profile-email">du@exempel.se</p>
+          </div>
+        </div>
+
+        <div class="profile-detail">
+          <p class="detail-label">Plats</p>
+          <p id="profile-coordinates">59.3293, 18.0686</p>
+        </div>
+
+        <button class="profile-action-button" type="button">Redigera</button>
+        <button id="logoutBtn" class="profile-logout-button" type="button">
+          Logga ut
+        </button>
+        <button id="openAdmin" class="profile-action-button hidden">
+  Admin panel
+</button>
+      </div>
+
+      <div class="profile-edit-panel" aria-hidden="true">
+        <div class="profile-edit-header">
+          <div>
+            <p class="panel-title">Redigera profil</p>
+            <p class="panel-subtitle">Ändra dina uppgifter och lösenord</p>
+          </div>
+          <button class="profile-edit-close" aria-label="Stäng redigera profil">
+            ×
+          </button>
+        </div>
+
+        <div class="profile-edit-body">
+          <label class="form-field">
+            <span>Namn</span>
+            <input id="edit-name" type="text" value="Du" />
+          </label>
+          <label class="form-field">
+            <span>E-post</span>
+            <input id="edit-email" type="email" value="du@exempel.se" />
+          </label>
+
+          <p class="edit-password-label">
+            Ändra lösenord <span>(valfritt)</span>
+          </p>
+          <label class="form-field">
+            <span>Nuvarande lösenord</span>
+            <input
+              id="current-password"
+              type="password"
+              placeholder="Ange ditt nuvarande lösenord"
+            />
+          </label>
+          <label class="form-field">
+            <span>Nytt lösenord</span>
+            <input
+              id="new-password"
+              type="password"
+              placeholder="Lämna tomt för att behålla"
+            />
+          </label>
+          <label class="form-field">
+            <span>Bekräfta lösenord</span>
+            <input
+              id="confirm-password"
+              type="password"
+              placeholder="Bekräfta nytt lösenord"
+            />
+          </label>
+
+          <div class="profile-edit-actions">
+            <button class="profile-edit-cancel" type="button">Avbryt</button>
+            <button class="profile-edit-save" type="button">Spara</button>
+          </div>
         </div>
       </div>
-    </footer>
 
-    <!-- PAGE-SPECIFIC JAVASCRIPT -->
-    <script type="module" src="./src/scripts/index.js"></script>
+      <p class="panel-subtitle">My Posts</p>
+      <ul id="myPosts"></ul>
+      
+    </aside>
+
+    <div id="map"></div>
+    <button id="filterBtn" aria-label="Filtrera växter">
+      <span class="filter-icon">&#9776;</span>
+    </button>
+    <aside class="filter-panel" aria-hidden="true">
+      <button class="filter-panel-close" aria-label="Stäng filter">×</button>
+      <p class="panel-title">Filtrera växter</p>
+      <p class="panel-subtitle">Visa bara det du letar efter</p>
+
+      <div class="form-group" style="margin-top: 16px">
+        <label>Växttyp</label>
+        <div class="filter-checkbox-list">
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Monstera" data-type="name" />
+            Monstera</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Efeutute" data-type="name" />
+            Efeutute</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Svärmorstunga" data-type="name" />
+            Svärmorstunga</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Fredslilja" data-type="name" />
+            Fredslilja</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Gummiträd" data-type="name" />
+            Gummiträd</label
+          >
+          <label class="filter-checkbox-item"
+            ><input
+              type="checkbox"
+              value="Fiolbladsfikonträd"
+              data-type="name"
+            />
+            Fiolbladsfikonträd</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Spindelplanta" data-type="name" />
+            Spindelplanta</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="ZZ-växt" data-type="name" />
+            ZZ-växt</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Filodendron" data-type="name" />
+            Filodendron</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Pilea" data-type="name" />
+            Pilea</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Aloe Vera" data-type="name" /> Aloe
+            Vera</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Echeveria" data-type="name" />
+            Echeveria</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Jadeplanta" data-type="name" />
+            Jadeplanta</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Kaktus" data-type="name" />
+            Kaktus</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Haworthia" data-type="name" />
+            Haworthia</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Orkidé" data-type="name" />
+            Orkidé</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Afrikanskt Viol" data-type="name" />
+            Afrikanskt Viol</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Kalanchoe" data-type="name" />
+            Kalanchoe</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Anthurium" data-type="name" />
+            Anthurium</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Begonia" data-type="name" />
+            Begonia</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Murgröna" data-type="name" />
+            Murgröna</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Tradescantia" data-type="name" />
+            Tradescantia</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Gullranka" data-type="name" />
+            Gullranka</label
+          >
+          <label class="filter-checkbox-item"
+            ><input
+              type="checkbox"
+              value="Hängande Ampellilja"
+              data-type="name"
+            />
+            Hängande Ampellilja</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Passionsblomma" data-type="name" />
+            Passionsblomma</label
+          >
+          <label class="filter-checkbox-item"
+            ><input type="checkbox" value="Övrigt" data-type="name" />
+            Övrigt</label
+          >
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 12px">
+        <label>Ljusnivå</label>
+        <div class="filter-checkbox-list">
+          <label class="filter-checkbox-item">
+            <input type="checkbox" value="1" data-type="light" /> Lågt ljus
+          </label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" value="2" data-type="light" /> Normalt ljus
+          </label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" value="3" data-type="light" /> Starkt ljus
+          </label>
+        </div>
+      </div>
+
+      <button
+        id="applyFilter"
+        class="panel-save"
+        style="width: 100%; margin-top: 16px"
+      >
+        Använd filter
+      </button>
+      <button
+        id="clearFilter"
+        class="panel-cancel"
+        style="width: 100%; margin-top: 8px"
+      >
+        Rensa filter
+      </button>
+    </aside>
+
+    <button id="addPlantBtn">+</button>
+    <aside class="addPlant-panel" aria-hidden="true">
+      <button class="plantPanel-close" aria-label="Stäng profil">×</button>
+      <select id="plantTypeInput">
+        <option value="">-- Välj växttyp --</option>
+        <option value="Monstera">Monstera</option>
+        <option value="Efeutute">Efeutute</option>
+        <option value="Svärmorstunga">Svärmorstunga</option>
+        <option value="Fredslilja">Fredslilja</option>
+        <option value="Gummiträd">Gummiträd</option>
+        <option value="Fiolbladsfikonträd">Fiolbladsfikonträd</option>
+        <option value="Spindelplanta">Spindelplanta</option>
+        <option value="ZZ-växt">ZZ-växt</option>
+        <option value="Filodendron">Filodendron</option>
+        <option value="Pilea">Pilea</option>
+        <option value="Aloe Vera">Aloe Vera</option>
+        <option value="Echeveria">Echeveria</option>
+        <option value="Jadeplanta">Jadeplanta</option>
+        <option value="Kaktus">Kaktus</option>
+        <option value="Haworthia">Haworthia</option>
+        <option value="Orkidé">Orkidé</option>
+        <option value="Afrikanskt Viol">Afrikanskt Viol</option>
+        <option value="Kalanchoe">Kalanchoe</option>
+        <option value="Anthurium">Anthurium</option>
+        <option value="Begonia">Begonia</option>
+        <option value="Murgröna">Murgröna</option>
+        <option value="Tradescantia">Tradescantia</option>
+        <option value="Gullranka">Gullranka</option>
+        <option value="Hängande Ampellilja">Hängande Ampellilja</option>
+        <option value="Passionsblomma">Passionsblomma</option>
+        <option value="Övrigt">Övrigt</option>
+      </select>
+      <select name="Light Level" id="LightLevelInput">
+        <option value="1">Low Light</option>
+        <option value="2">Day Light</option>
+        <option value="3">Extreme Light</option>
+      </select>
+      <input
+        type="file"
+        accept="image/*"
+        id="imageUpload"
+        style="display: none"
+      />
+      <button
+        type="button"
+        onclick="document.getElementById('imageUpload').click()"
+      >
+        Välj bild
+      </button>
+      <span
+        id="image-chosen"
+        style="display: none; font-size: 13px; color: #327345"
+        >&#10003; Bild vald</span
+      >
+      <button id="upload">Lägg till växt</button>
+      <p
+        id="post-success"
+        style="display: none; font-size: 13px; color: #327345; margin: 0"
+      >
+        &#10003; Växt tillagd!
+      </p>
+    </aside>
+    <aside id="admin-panel" class="admin-panel hidden">
+      <div class="admin-panel__header">
+        <h2>Admin Dashboard</h2>
+        <button id="closeAdminPanel">×</button>
+      </div>
+
+      <section>
+        <h3>Användare</h3>
+        <ul id="admin-users-list"></ul>
+      </section>
+
+      <section>
+        <h3>Växter</h3>
+        <ul id="admin-plants-list"></ul>
+      </section>
+
+      <section>
+        <h3>Trades</h3>
+        <div id="admin-trades-list"></div>
+      </section>
+    </aside>
+
+    <script src="src/scripts/filter.js" defer></script>
   </body>
 </html>
